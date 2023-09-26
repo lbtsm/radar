@@ -63,7 +63,7 @@ func (c *Chain) sync() error {
 					}
 
 					sData, _ := json.Marshal(outcome)
-					txHash := redis.GetClient().Get(context.Background(), outcome.ExecutionOutcome.ID.String())
+					txHash := redis.GetClient().Get(context.Background(), outcome.ExecutionOutcome.ID.String()).String()
 					c.log.Info("Event found", "log", outcome.ExecutionOutcome.Outcome.Logs, "contract", outcome.ExecutionOutcome.Outcome.ExecutorID)
 					_, err = mysql.GetDb().Exec("INSERT INTO mos_event (chain_id, tx_hash, contract_address, topic, block_number, log_index, log_data, tx_timestamp) "+
 						"VALUES (?, ?, ?, ?, ?, ?, ?, ?)", cid, txHash, outcome.ExecutionOutcome.Outcome.ExecutorID, "",
