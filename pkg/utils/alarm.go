@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/log"
@@ -14,6 +15,7 @@ import (
 
 var (
 	prefix, hooksUrl = "", ""
+	lock             = sync.RWMutex{}
 	monitor          = make(map[string]int64)
 )
 
@@ -27,12 +29,16 @@ func Alarm(ctx context.Context, msg string) {
 		log.Info("hooks is empty")
 		return
 	}
+	lock.RLock()
 	if v, ok := monitor[msg]; ok {
 		if time.Now().Unix()-v < 300 { // ignore same alarm in five minute
 			return
 		}
 	}
+	lock.RUnlock()
+	lock.Lock()
 	monitor[msg] = time.Now().Unix()
+	lock.Unlock()
 	body, err := json.Marshal(map[string]interface{}{
 		"text": fmt.Sprintf("%s %s", prefix, msg),
 	})
