@@ -43,7 +43,7 @@ func (c *Chain) sync() error {
 				continue
 			}
 			err = c.mosHandler(currentBlock)
-			if err != nil {
+			if err != nil && !errors.Is(err, errors.New("invalid transaction v, r, s values")) {
 				c.log.Error("Failed to get events for block", "block", currentBlock, "err", err)
 				utils.Alarm(context.Background(), fmt.Sprintf("mos failed, chain=%s, err is %s", c.cfg.Name, err.Error()))
 				time.Sleep(constant.RetryInterval)
