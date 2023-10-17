@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/mapprotocol/filter/pkg/mysql"
 	"math/big"
 	"strconv"
@@ -38,12 +39,12 @@ func (c *Chain) sync() error {
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
-				c.log.Info("Block not ready, will retry", "currentBlock", currentBlock, "latest", latestBlock)
+				c.log.Debug("Block not ready, will retry", "currentBlock", currentBlock, "latest", latestBlock)
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
 			err = c.mosHandler(currentBlock)
-			if err != nil && !errors.Is(err, errors.New("invalid transaction v, r, s values")) {
+			if err != nil && !errors.Is(err, types.ErrInvalidSig) {
 				c.log.Error("Failed to get events for block", "block", currentBlock, "err", err)
 				utils.Alarm(context.Background(), fmt.Sprintf("mos failed, chain=%s, err is %s", c.cfg.Name, err.Error()))
 				time.Sleep(constant.RetryInterval)
