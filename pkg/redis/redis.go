@@ -14,6 +14,9 @@ var (
 
 func Init(url string) {
 	if url == "" {
+		return
+	}
+	if url == "" {
 		panic("messenger redisUrl is empty")
 	}
 	once.Do(func() {
