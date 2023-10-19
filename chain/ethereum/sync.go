@@ -75,8 +75,12 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 	if len(logs) == 0 {
 		return nil
 	}
-	// query block
-	block, err := c.conn.Client().BlockByNumber(context.Background(), latestBlock)
+	//// query block
+	//block, err := c.conn.Client().BlockByNumber(context.Background(), latestBlock)
+	//if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
+	//	return err
+	//}
+	header, err := c.conn.Client().HeaderByNumber(context.Background(), latestBlock)
 	if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
 		return err
 	}
@@ -99,7 +103,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 		}
 		// save
 		_, err = mysql.GetDb().Exec("INSERT INTO mos_event (chain_id, tx_hash, contract_address, topic, block_number, log_index, log_data, tx_timestamp) "+
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?)", cid, l.TxHash.String(), l.Address.String(), topic, l.BlockNumber, l.Index, common.Bytes2Hex(l.Data), block.Time())
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?)", cid, l.TxHash.String(), l.Address.String(), topic, l.BlockNumber, l.Index, common.Bytes2Hex(l.Data), header.Time)
 		if err != nil {
 			if strings.Index(err.Error(), "Duplicate") != -1 {
 				c.log.Info("log inserted", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
