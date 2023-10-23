@@ -38,7 +38,10 @@ func (c *Chain) sync() error {
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
-			redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfLatestBlock, c.cfg.Id), currentBlock, 0)
+			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfLatestBlock, c.cfg.Id), currentBlock, 0).Err()
+			if err != nil {
+				c.log.Error("Save latestBlock to redis failed", "block", currentBlock, "err", err)
+			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
 				c.log.Debug("Block not ready, will retry", "currentBlock", currentBlock, "latest", latestBlock)
@@ -57,7 +60,10 @@ func (c *Chain) sync() error {
 			if err != nil {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
-			redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfCurrentBlock, c.cfg.Id), currentBlock, 0)
+			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfCurrentBlock, c.cfg.Id), currentBlock, 0).Err()
+			if err != nil {
+				c.log.Error("Save currentBlock to redis failed", "block", currentBlock, "err", err)
+			}
 
 			currentBlock.Add(currentBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
