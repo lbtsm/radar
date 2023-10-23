@@ -20,3 +20,8 @@ var (
 		Usage: "JSON configuration file",
 	}
 )
+
+const (
+	FlagOfLatestBlock  = "latest_blockNumber_%s" // chainId
+	FlagOfCurrentBlock = "currentHandler_number_%s"
+)

@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/mapprotocol/filter/pkg/mysql"
+	"github.com/mapprotocol/filter/pkg/redis"
 	"math/big"
 	"strconv"
 	"strings"
@@ -37,6 +38,7 @@ func (c *Chain) sync() error {
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
+			redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfLatestBlock, c.cfg.Id), currentBlock, 0)
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
 				c.log.Debug("Block not ready, will retry", "currentBlock", currentBlock, "latest", latestBlock)
@@ -55,6 +57,7 @@ func (c *Chain) sync() error {
 			if err != nil {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
+			redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfCurrentBlock, c.cfg.Id), currentBlock, 0)
 
 			currentBlock.Add(currentBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
@@ -75,11 +78,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 	if len(logs) == 0 {
 		return nil
 	}
-	//// query block
-	//block, err := c.conn.Client().BlockByNumber(context.Background(), latestBlock)
-	//if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
-	//	return err
-	//}
+
 	header, err := c.conn.Client().HeaderByNumber(context.Background(), latestBlock)
 	if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
 		return err
