@@ -38,7 +38,7 @@ func (c *Chain) sync() error {
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
-			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfLatestBlock, c.cfg.Id), currentBlock, 0).Err()
+			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfLatestBlock, c.cfg.Id), currentBlock.String(), 0).Err()
 			if err != nil {
 				c.log.Error("Save latestBlock to redis failed", "block", currentBlock, "err", err)
 			}
@@ -60,7 +60,7 @@ func (c *Chain) sync() error {
 			if err != nil {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
-			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfCurrentBlock, c.cfg.Id), currentBlock, 0).Err()
+			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfCurrentBlock, c.cfg.Id), currentBlock.String(), 0).Err()
 			if err != nil {
 				c.log.Error("Save currentBlock to redis failed", "block", currentBlock, "err", err)
 			}
