@@ -72,7 +72,7 @@ func parseConfig(cfg config.RawChainConfig, backup bool) (*EthConfig, error) {
 		}
 	} else {
 		extra, err := redis.GetClient().Get(context.Background(), fmt.Sprintf(constant.FlagOfAddEvent, ret.Id)).Result()
-		if err != nil && errors.Is(err, vr.Nil) {
+		if err != nil && !errors.Is(err, vr.Nil) {
 			return nil, err
 		}
 		if extra == "" {
