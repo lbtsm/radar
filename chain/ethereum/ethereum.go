@@ -14,8 +14,8 @@ type Chain struct {
 	bs   blockstore.BlockStorer
 }
 
-func New(cfg config.RawChainConfig) (*Chain, error) {
-	eCfg, err := parseConfig(cfg)
+func New(cfg config.RawChainConfig, backup bool) (*Chain, error) {
+	eCfg, err := parseConfig(cfg, backup)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,11 @@ func New(cfg config.RawChainConfig) (*Chain, error) {
 	if err != nil {
 		return nil, err
 	}
-	bs, err := blockstore.New(blockstore.PathPostfix, eCfg.Id)
+	prefix := blockstore.PathPostfix
+	if backup {
+		prefix = "./backup"
+	}
+	bs, err := blockstore.New(prefix, eCfg.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +51,9 @@ func (c *Chain) Start() error {
 		err := c.sync()
 		if err != nil {
 			c.log.Error("Polling blocks failed", "err", err)
+			return
 		}
+		c.log.Info("End Sync")
 	}()
 	c.log.Info("Starting filter ...")
 	return nil

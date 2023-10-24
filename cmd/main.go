@@ -24,7 +24,7 @@ func main() {
 	app.Authors = []*cli.Author{{Name: "MAP Protocol 2023"}}
 	app.Version = "1.0.0"
 	app.EnableBashCompletion = true
-	app.Flags = append(app.Flags, constant.ConfigFileFlag)
+	app.Flags = append(app.Flags, constant.ConfigFileFlag, constant.BackUpFlag)
 	app.Action = func(cli *cli.Context) error {
 		cfg, err := config.Local(cli.String(constant.ConfigFileFlag.Name))
 		if err != nil {
@@ -33,13 +33,13 @@ func main() {
 		redis.Init(cfg.Other.Redis)
 		mysql.Init(cfg.Other.Db)
 		utils.Init(cfg.Other.Env, cfg.Other.MonitorUrl)
-		chainers, err := chain.Init(cfg.Chains)
+		chains, err := chain.Init(cfg, cli.Bool(constant.BackUpFlag.Name))
 		if err != nil {
 			return err
 		}
 		sysErr := make(chan error)
 		c := core.New(sysErr)
-		for _, ch := range chainers {
+		for _, ch := range chains {
 			c.AddChain(ch)
 		}
 		c.Start()

@@ -13,18 +13,18 @@ type Chainer interface {
 	Stop()
 }
 
-func Init(cfgs []config.RawChainConfig) ([]Chainer, error) {
+func Init(cfgs *config.Config, backup bool) ([]Chainer, error) {
 	ret := make([]Chainer, 0)
-	for _, cfg := range cfgs {
+	for _, cfg := range cfgs.Chains {
 		var (
 			err error
 			c   Chainer
 		)
 		switch cfg.Type {
 		case constant.Ethereum:
-			c, err = ethereum.New(cfg)
+			c, err = ethereum.New(cfg, backup)
 		case constant.Near:
-			c, err = near.New(cfg)
+			c, err = near.New(cfg, backup)
 		default:
 			return nil, errors.New("unrecognized Chain Type")
 		}

@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
@@ -38,9 +39,8 @@ func (c *Chain) sync() error {
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
-			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfLatestBlock, c.cfg.Id), currentBlock.String(), 0).Err()
-			if err != nil {
-				c.log.Error("Save latestBlock to redis failed", "block", currentBlock, "err", err)
+			if !c.cfg.BackUp {
+				c.saveValue(constant.FlagOfLatestBlock, latestBlock)
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
@@ -60,9 +60,16 @@ func (c *Chain) sync() error {
 			if err != nil {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
-			err = redis.GetClient().Set(context.Background(), fmt.Sprintf(constant.FlagOfCurrentBlock, c.cfg.Id), currentBlock.String(), 0).Err()
-			if err != nil {
-				c.log.Error("Save currentBlock to redis failed", "block", currentBlock, "err", err)
+			if c.cfg.BackUp {
+				c.saveValue(constant.FlagOfBackUpProgress, currentBlock.String())
+				res, err := redis.GetClient().Get(context.Background(), fmt.Sprintf(constant.FlagOfBackUpStop, c.cfg.Id)).Result()
+				if err == nil {
+					c.log.Info("BackUp receive stop signal, will stop process", "res", res)
+					return nil
+				}
+			} else {
+				c.saveValue(constant.FlagOfCurrentBlock, currentBlock.String())
+				c.getBackupEvent(currentBlock)
 			}
 
 			currentBlock.Add(currentBlock, big.NewInt(1))
@@ -76,7 +83,6 @@ func (c *Chain) sync() error {
 func (c *Chain) mosHandler(latestBlock *big.Int) error {
 	cid, _ := strconv.ParseInt(c.cfg.Id, 10, 64)
 	query := c.BuildQuery(latestBlock, latestBlock)
-	// querying for logs
 	logs, err := c.conn.Client().FilterLogs(context.Background(), query)
 	if err != nil {
 		return fmt.Errorf("unable to Filter Logs: %w", err)
@@ -148,4 +154,52 @@ func existTopic(target common.Hash, dst []constant.EventSig) bool {
 		}
 	}
 	return false
+}
+
+func (c *Chain) saveValue(format string, value interface{}) {
+	if c.cfg.BackUp {
+		return
+	}
+	key := fmt.Sprintf(format, c.cfg.Id)
+	err := redis.GetClient().Set(context.Background(), key, value, 0).Err()
+	if err != nil {
+		c.log.Error("Save latestBlock to redis failed", "value", value, "err", err)
+	}
+}
+
+func (c *Chain) getBackupEvent(currentBlock *big.Int) {
+	res, err := redis.GetClient().Get(context.Background(), fmt.Sprintf(constant.FlagOfBackUpProgress, c.cfg.Id)).Result()
+	if err != nil {
+		return
+	}
+	c.log.Info("Get backup event progress", "backupProgress", res, "currentBlock", currentBlock)
+	bac, _ := big.NewInt(0).SetString(res, 10)
+	if bac.Uint64() < currentBlock.Uint64() {
+		return
+	}
+	// add event
+	backup, err := redis.GetClient().Get(context.Background(), fmt.Sprintf(constant.FlagOfBackUpEvent, c.cfg.Id)).Result()
+	if err != nil {
+		c.log.Error("Failed to Get backup event", "err", err)
+		return
+	}
+	c.log.Info("Get backup event", "backupEvent", backup)
+	bu := constant.BackUpEvent{}
+	err = json.Unmarshal([]byte(backup), &bu)
+	if err != nil {
+		c.log.Error("Failed to Unmarshal", "data", backup, "err", err)
+		return
+	}
+	c.log.Info("Get backup event before", "address", c.cfg.Mcs, "event", c.cfg.Events, "add", bu.Address, "addEvent", c.cfg.Events)
+	for _, a := range bu.Address {
+		c.cfg.Mcs = append(c.cfg.Mcs, common.HexToAddress(a))
+	}
+	for _, s := range bu.Event {
+		c.cfg.Events = append(c.cfg.Events, constant.EventSig(s))
+	}
+	c.log.Info("Get backup event after", "address", c.cfg.Mcs, "event", c.cfg.Events)
+	// insert backup stop signal
+	c.saveValue(constant.FlagOfBackUpStop, 1)
+	// 保存
+	c.saveValue(constant.FlagOfAddEvent, backup)
 }

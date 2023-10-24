@@ -13,7 +13,7 @@ type Chain struct {
 	bs   blockstore.BlockStorer
 }
 
-func New(cfg config.RawChainConfig) (*Chain, error) {
+func New(cfg config.RawChainConfig, backup bool) (*Chain, error) {
 	eCfg, err := parseConfig(cfg)
 	if err != nil {
 		return nil, err
