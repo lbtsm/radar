@@ -64,6 +64,7 @@ func (c *Chain) sync() error {
 				c.saveValue(constant.FlagOfBackUpProgress, currentBlock.String())
 				res, err := redis.GetClient().Get(context.Background(), fmt.Sprintf(constant.FlagOfBackUpStop, c.cfg.Id)).Result()
 				if err == nil {
+					redis.GetClient().Del(context.Background(), fmt.Sprintf(constant.FlagOfBackUpProgress, c.cfg.Id))
 					c.log.Info("BackUp receive stop signal, will stop process", "res", res)
 					return nil
 				}
@@ -197,6 +198,8 @@ func (c *Chain) getBackupEvent(currentBlock *big.Int) {
 	c.log.Info("Get backup event after", "address", c.cfg.Mcs, "event", c.cfg.Events)
 	// insert backup stop signal
 	c.saveValue(constant.FlagOfBackUpStop, 1)
-	// 保存
+	// save
 	c.saveValue(constant.FlagOfAddEvent, backup)
+	// del
+	redis.GetClient().Del(context.Background(), fmt.Sprintf(constant.FlagOfBackUpEvent, c.cfg.Id))
 }
