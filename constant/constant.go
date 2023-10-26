@@ -32,7 +32,7 @@ const (
 	FlagOfBackUpProgress = "backup_event_progress_%s"
 	FlagOfBackUpEvent    = "backup_event_%s"
 	FlagOfBackUpStop     = "backup_stop_%s"
-	FlagOfAddEvent       = "extra_event_%s"
+	FlagOfAddEvent       = "main_extra_event_%s"
 )
 
 type BackUpEvent struct {

@@ -157,9 +157,6 @@ func existTopic(target common.Hash, dst []constant.EventSig) bool {
 }
 
 func (c *Chain) saveValue(format string, value interface{}) {
-	if c.cfg.BackUp {
-		return
-	}
 	key := fmt.Sprintf(format, c.cfg.Id)
 	err := redis.GetClient().Set(context.Background(), key, value, 0).Err()
 	if err != nil {
