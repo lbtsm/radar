@@ -57,6 +57,7 @@ func (c *Chain) sync() error {
 			}
 
 			err = c.bs.StoreBlock(currentBlock)
+			utils.AddProgress(c.cfg.Id)
 			if err != nil {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
