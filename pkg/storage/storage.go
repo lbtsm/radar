@@ -18,9 +18,9 @@ type Saver interface {
 func NewSaver(tp, url string) (Saver, error) {
 	switch tp {
 	case constant.Redis:
-		return newMysql(url)
-	case constant.Mysql:
 		return newRds(url)
+	case constant.Mysql:
+		return newMysql(url)
 	default:
 		return nil, ErrorOfStorageType
 	}
