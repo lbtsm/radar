@@ -12,4 +12,4 @@ CENT_METADATA?=0x0
 
 build:
 	@echo "  >  \033[32mBuilding filter...\033[0m "
-	cd cmd && go build -o ../build/filter
+	go mod tidy && cd cmd && go build -o ../build/filter

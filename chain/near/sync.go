@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	rds "github.com/go-redis/redis/v8"
-	"github.com/mapprotocol/filter/constant"
-	"github.com/mapprotocol/filter/pkg/mysql"
-	"github.com/mapprotocol/filter/pkg/redis"
+	"github.com/mapprotocol/filter/internal/constant"
+	"github.com/mapprotocol/filter/internal/dao"
 	"strconv"
 	"strings"
 	"time"
+)
+
+var (
+	ListKey = "near_messsage_log"
 )
 
 func (c *Chain) sync() error {
@@ -21,7 +24,7 @@ func (c *Chain) sync() error {
 			return errors.New("polling terminated")
 		default:
 			ctx := context.Background()
-			cmd := redis.GetClient().RPop(ctx, redis.ListKey)
+			cmd := c.rdb.RPop(ctx, ListKey)
 			result, err := cmd.Result()
 			if err != nil && !errors.Is(err, rds.Nil) {
 				c.log.Error("Unable to get latest block", "err", err)
@@ -62,26 +65,29 @@ func (c *Chain) sync() error {
 						continue
 					}
 
-					txHash, err := redis.GetClient().Get(context.Background(), outcome.ExecutionOutcome.ID.String()).Result()
+					txHash, err := c.rdb.Get(context.Background(), outcome.ExecutionOutcome.ID.String()).Result()
 					if err != nil {
 						c.log.Error("Get TxHah Failed", "receiptId", outcome.ExecutionOutcome.ID.String())
 						continue
 					}
 					sData, _ := json.Marshal(outcome)
-					c.log.Info("Event found", "log", outcome.ExecutionOutcome.Outcome.Logs, "contract", outcome.ExecutionOutcome.Outcome.ExecutorID)
-					_, err = mysql.GetDb().Exec("INSERT INTO mos_event (chain_id, tx_hash, contract_address, topic, block_number, log_index, log_data, tx_timestamp) "+
-						"VALUES (?, ?, ?, ?, ?, ?, ?, ?)", cid, txHash, outcome.ExecutionOutcome.Outcome.ExecutorID, "",
-						data.Block.Header.Height, idx, string(sData), data.Block.Header.Timestamp)
-					if err != nil {
-						if strings.Index(err.Error(), "Duplicate") != -1 {
-							c.log.Info("log inserted", "blockNumber", data.Block.Header.Height, "hash", txHash, "logIndex", idx)
+					for _, s := range c.storages {
+						err = s.Storage(0, &dao.MosEvent{
+							ChainId:         cid,
+							TxHash:          txHash,
+							ContractAddress: outcome.ExecutionOutcome.Outcome.ExecutorID,
+							Topic:           "",
+							BlockNumber:     data.Block.Header.Height,
+							LogIndex:        uint(idx),
+							LogData:         string(sData),
+							TxTimestamp:     data.Block.Header.Timestamp,
+						})
+						if err != nil {
+							c.log.Error("insert failed", "blockNumber", data.Block.Header.Height, "hash", txHash, "logIndex", idx, "err", err)
 							continue
 						}
-						c.log.Error("insert failed", "hash", txHash, "logIndex", idx, "err", err)
-						continue
+						c.log.Info("insert success", "blockNumber", data.Block.Header.Height, "hash", txHash, "logIndex", idx)
 					}
-					c.log.Info("insert success", "blockNumber", data.Block.Header.Height, "hash", txHash, "logIndex", idx)
-					time.Sleep(time.Millisecond * 50)
 				}
 			}
 		}
