@@ -46,12 +46,12 @@ type Storage struct {
 }
 
 func (c *Config) validate() error {
-	for _, chain := range c.Chains {
+	for idx, chain := range c.Chains {
 		if chain.Id == "" {
 			return fmt.Errorf("required field chain.Id empty for chain %s", chain.Id)
 		}
 		if chain.Type == "" {
-			chain.Type = constant.Ethereum
+			c.Chains[idx].Type = constant.Ethereum
 		}
 		if chain.Endpoint == "" {
 			return fmt.Errorf("required field chain.Endpoint empty for chain %s", chain.Id)
@@ -60,8 +60,8 @@ func (c *Config) validate() error {
 			return fmt.Errorf("required field chain.Name empty for chain %s", chain.Id)
 		}
 		if chain.Type == constant.Ethereum {
-			chain.Opts.Event = c.Events + "|" + chain.Opts.Event // splicing
-			chain.Opts.Mcs = c.Address + "," + chain.Opts.Mcs    // splicing
+			c.Chains[idx].Opts.Event = c.Events + "|" + chain.Opts.Event // splicing
+			c.Chains[idx].Opts.Mcs = c.Address + "," + chain.Opts.Mcs    // splicing
 		}
 	}
 	return nil
