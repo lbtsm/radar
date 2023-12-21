@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/mapprotocol/filter/internal/constant"
 	"github.com/mapprotocol/filter/internal/dao"
@@ -50,6 +51,7 @@ func (r *Redis) Storage(toChainId uint64, event *dao.MosEvent) error {
 	var key string
 	if event.ChainId == 22776 || event.ChainId == 212 || event.ChainId == 213 {
 		if _, ok := constant.OnlineChaId[strconv.FormatUint(toChainId, 10)]; !ok {
+			log.Info("ignore event", "event", event, "toChainId", toChainId)
 			return nil
 		}
 		key = fmt.Sprintf(KeyOfMapMessenger, event.ChainId, toChainId)
