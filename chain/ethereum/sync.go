@@ -99,7 +99,10 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 				topic += ","
 			}
 			if idx == len(l.Topics)-1 {
-				big.NewInt(0).SetString(t.String(), 16)
+				tmp, ok := big.NewInt(0).SetString(t.String(), 16)
+				if ok {
+					toChainId = tmp.Uint64()
+				}
 			}
 		}
 		for _, s := range c.storages {
