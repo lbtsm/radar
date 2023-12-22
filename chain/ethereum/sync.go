@@ -103,8 +103,6 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 				if ok {
 					toChainId = tmp.Uint64()
 				}
-				fmt.Println("tmp ------------------", tmp, "ok ", ok,
-					"topic", strings.TrimPrefix(t.Hex(), "0x"))
 			}
 		}
 		for _, s := range c.storages {
