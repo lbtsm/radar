@@ -99,10 +99,12 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 				topic += ","
 			}
 			if idx == len(l.Topics)-1 {
-				tmp, ok := big.NewInt(0).SetString(t.String(), 16)
+				tmp, ok := big.NewInt(0).SetString(strings.TrimPrefix(t.Hex(), "0x"), 16)
 				if ok {
 					toChainId = tmp.Uint64()
 				}
+				fmt.Println("tmp ------------------", tmp, "ok ", ok,
+					"topic", strings.TrimPrefix(t.Hex(), "0x"))
 			}
 		}
 		for _, s := range c.storages {
@@ -153,3 +155,10 @@ func existTopic(target common.Hash, dst []constant2.EventSig) bool {
 	}
 	return false
 }
+
+/*
+{
+      "type": "mysql",
+      "url": "event_filter:FLRk1!2o9df9mpK2FLKF+#F@tcp(10.0.3.12:3306)/event_filter?charset=utf8&parseTime=true"
+    },
+*/
