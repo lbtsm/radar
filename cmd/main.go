@@ -25,6 +25,7 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Flags = append(app.Flags, constant.ConfigFileFlag)
 	app.Action = func(cli *cli.Context) error {
+		log.Root().SetHandler(log.StdoutHandler)
 		cfg, err := config.Local(cli.String(constant.ConfigFileFlag.Name))
 		if err != nil {
 			return err
