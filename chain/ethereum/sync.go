@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	constant2 "github.com/mapprotocol/filter/internal/constant"
+	"github.com/mapprotocol/filter/internal/constant"
 	"github.com/mapprotocol/filter/internal/dao"
 	"math/big"
 	"strconv"
@@ -34,20 +34,25 @@ func (c *Chain) sync() error {
 			latestBlock, err := c.conn.Client().BlockNumber(context.Background())
 			if err != nil {
 				c.log.Error("Unable to get latest block", "block", currentBlock, "err", err)
-				time.Sleep(constant2.RetryInterval)
+				time.Sleep(constant.RetryInterval)
 				continue
+			}
+
+			err = c.rdb.Set(context.Background(), fmt.Sprintf(constant.KeyOfLatestBlock, c.cfg.Id), latestBlock, 0).Err()
+			if err != nil {
+				c.log.Error("Save latest block height failed", "block", currentBlock, "err", err)
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
 				c.log.Debug("Block not ready, will retry", "currentBlock", currentBlock, "latest", latestBlock)
-				time.Sleep(constant2.RetryInterval)
+				time.Sleep(constant.RetryInterval)
 				continue
 			}
 			err = c.mosHandler(currentBlock)
 			if err != nil && !errors.Is(err, types.ErrInvalidSig) {
 				c.log.Error("Failed to get events for block", "block", currentBlock, "err", err)
 				utils.Alarm(context.Background(), fmt.Sprintf("mos failed, chain=%s, err is %s", c.cfg.Name, err.Error()))
-				time.Sleep(constant2.RetryInterval)
+				time.Sleep(constant.RetryInterval)
 				continue
 			}
 
@@ -58,7 +63,7 @@ func (c *Chain) sync() error {
 
 			currentBlock.Add(currentBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
-				time.Sleep(constant2.RetryInterval)
+				time.Sleep(constant.RetryInterval)
 			}
 		}
 	}
@@ -145,7 +150,7 @@ func exist(target common.Address, dst []common.Address) bool {
 	return false
 }
 
-func existTopic(target common.Hash, dst []constant2.EventSig) bool {
+func existTopic(target common.Hash, dst []constant.EventSig) bool {
 	for _, d := range dst {
 		if target == d.GetTopic() {
 			return true

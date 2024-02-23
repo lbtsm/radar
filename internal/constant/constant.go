@@ -29,3 +29,7 @@ var (
 var (
 	OnlineChaId = map[string]struct{}{}
 )
+
+const (
+	KeyOfLatestBlock = "chain_%s_latest_block"
+)

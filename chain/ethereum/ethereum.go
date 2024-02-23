@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/go-redis/redis/v8"
 	"github.com/mapprotocol/filter/config"
 	"github.com/mapprotocol/filter/pkg/blockstore"
 	"github.com/mapprotocol/filter/pkg/storage"
@@ -12,6 +13,7 @@ type Chain struct {
 	log      log.Logger
 	cfg      *EthConfig
 	stop     chan struct{}
+	rdb      *redis.Client
 	bs       blockstore.BlockStorer
 	storages []storage.Saver
 }
@@ -32,12 +34,17 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 		return nil, err
 	}
 
+	opt, err := redis.ParseURL(cfg.Opts.Redis)
+	if err != nil {
+		panic(err)
+	}
 	ret := &Chain{
 		conn:     conn,
 		log:      log.New("chain", eCfg.Name),
 		cfg:      eCfg,
 		stop:     make(chan struct{}),
 		bs:       bs,
+		rdb:      redis.NewClient(opt),
 		storages: storages,
 	}
 	ret.log.SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StdoutHandler))
