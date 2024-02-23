@@ -38,9 +38,11 @@ func (c *Chain) sync() error {
 				continue
 			}
 
-			err = c.rdb.Set(context.Background(), fmt.Sprintf(constant.KeyOfLatestBlock, c.cfg.Id), latestBlock, 0).Err()
-			if err != nil {
-				c.log.Error("Save latest block height failed", "block", currentBlock, "err", err)
+			for _, s := range c.storages {
+				err = s.LatestBlockNumber(c.cfg.Id, latestBlock)
+				if err != nil {
+					c.log.Error("Save latest block height failed", "storage", s.Type(), "err", err)
+				}
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
@@ -111,7 +113,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 			}
 		}
 		for _, s := range c.storages {
-			err = s.Storage(toChainId, &dao.MosEvent{
+			err = s.Event(toChainId, &dao.MosEvent{
 				ChainId:         cid,
 				TxHash:          l.TxHash.String(),
 				ContractAddress: l.Address.String(),

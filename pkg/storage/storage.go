@@ -11,8 +11,9 @@ var (
 )
 
 type Saver interface {
-	GetType() string
-	Storage(uint64, *dao.MosEvent) error
+	Type() string
+	Event(uint64, *dao.MosEvent) error
+	LatestBlockNumber(chainId string, latest uint64) error
 }
 
 func NewSaver(tp, url string) (Saver, error) {

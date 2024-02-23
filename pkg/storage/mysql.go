@@ -45,16 +45,22 @@ func (m *Mysql) init() error {
 	return nil
 }
 
-func (m *Mysql) GetType() string {
+func (m *Mysql) Type() string {
 	return constant.Mysql
 }
 
-func (m *Mysql) Storage(toChainId uint64, event *dao.MosEvent) error {
+func (m *Mysql) Event(toChainId uint64, event *dao.MosEvent) error {
 	err := m.db.Create(event).Error
-	if strings.Index(err.Error(), "Duplicate") != -1 {
-		log.Info("log inserted", "blockNumber", event.BlockNumber, "hash", event.TxHash,
-			"logIndex", event.LogIndex)
-		return nil
+	if err != nil {
+		if strings.Index(err.Error(), "Duplicate") != -1 {
+			log.Info("log is inserted", "blockNumber", event.BlockNumber, "hash", event.TxHash,
+				"logIndex", event.LogIndex)
+		}
+		return err
 	}
+	return nil
+}
+
+func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
 	return nil
 }

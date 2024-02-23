@@ -72,7 +72,7 @@ func (c *Chain) sync() error {
 					}
 					sData, _ := json.Marshal(outcome)
 					for _, s := range c.storages {
-						err = s.Storage(0, &dao.MosEvent{
+						err = s.Event(0, &dao.MosEvent{
 							ChainId:         cid,
 							TxHash:          txHash,
 							ContractAddress: outcome.ExecutionOutcome.Outcome.ExecutorID,

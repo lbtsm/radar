@@ -43,11 +43,11 @@ func (r *Redis) init() error {
 	return nil
 }
 
-func (r *Redis) GetType() string {
+func (r *Redis) Type() string {
 	return constant.Redis
 }
 
-func (r *Redis) Storage(toChainId uint64, event *dao.MosEvent) error {
+func (r *Redis) Event(toChainId uint64, event *dao.MosEvent) error {
 	var key string
 	if event.ChainId == 22776 || event.ChainId == 212 || event.ChainId == 213 {
 		if _, ok := constant.OnlineChaId[strconv.FormatUint(toChainId, 10)]; !ok {
@@ -60,6 +60,14 @@ func (r *Redis) Storage(toChainId uint64, event *dao.MosEvent) error {
 	}
 	data, _ := json.Marshal(event)
 	_, err := r.redisClient.RPush(context.Background(), key, data).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Redis) LatestBlockNumber(chainId string, latest uint64) error {
+	err := r.redisClient.Set(context.Background(), fmt.Sprintf(constant.KeyOfLatestBlock, chainId), latest, 0).Err()
 	if err != nil {
 		return err
 	}
