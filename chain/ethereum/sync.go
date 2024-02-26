@@ -7,13 +7,13 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/mapprotocol/filter/pkg/mysql"
+	"github.com/mapprotocol/filter/internal/constant"
+	"github.com/mapprotocol/filter/internal/dao"
 	"math/big"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/mapprotocol/filter/constant"
 	"github.com/mapprotocol/filter/pkg/utils"
 )
 
@@ -36,6 +36,13 @@ func (c *Chain) sync() error {
 				c.log.Error("Unable to get latest block", "block", currentBlock, "err", err)
 				time.Sleep(constant.RetryInterval)
 				continue
+			}
+
+			for _, s := range c.storages {
+				err = s.LatestBlockNumber(c.cfg.Id, latestBlock)
+				if err != nil {
+					c.log.Error("Save latest block height failed", "storage", s.Type(), "err", err)
+				}
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
@@ -75,11 +82,6 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 	if len(logs) == 0 {
 		return nil
 	}
-	//// query block
-	//block, err := c.conn.Client().BlockByNumber(context.Background(), latestBlock)
-	//if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
-	//	return err
-	//}
 	header, err := c.conn.Client().HeaderByNumber(context.Background(), latestBlock)
 	if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
 		return err
@@ -94,26 +96,40 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 			continue
 		}
 
-		var topic string
+		var (
+			topic     string
+			toChainId uint64
+		)
 		for idx, t := range l.Topics {
 			topic += t.Hex()
 			if idx != len(l.Topics)-1 {
 				topic += ","
 			}
+			if idx == len(l.Topics)-1 {
+				tmp, ok := big.NewInt(0).SetString(strings.TrimPrefix(t.Hex(), "0x"), 16)
+				if ok {
+					toChainId = tmp.Uint64()
+				}
+			}
 		}
-		// save
-		_, err = mysql.GetDb().Exec("INSERT INTO mos_event (chain_id, tx_hash, contract_address, topic, block_number, log_index, log_data, tx_timestamp) "+
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?)", cid, l.TxHash.String(), l.Address.String(), topic, l.BlockNumber, l.Index, common.Bytes2Hex(l.Data), header.Time)
-		if err != nil {
-			if strings.Index(err.Error(), "Duplicate") != -1 {
-				c.log.Info("log inserted", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
+		for _, s := range c.storages {
+			err = s.Event(toChainId, &dao.MosEvent{
+				ChainId:         cid,
+				TxHash:          l.TxHash.String(),
+				ContractAddress: l.Address.String(),
+				Topic:           topic,
+				BlockNumber:     l.BlockNumber,
+				LogIndex:        l.Index,
+				LogData:         common.Bytes2Hex(l.Data),
+				TxTimestamp:     header.Time,
+			})
+			if err != nil {
+				c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
 				continue
 			}
-			c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
-			continue
+			c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
 		}
-		c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
-		time.Sleep(time.Millisecond * 50)
+		//time.Sleep(time.Millisecond * 50)
 	}
 
 	return nil
@@ -144,3 +160,10 @@ func existTopic(target common.Hash, dst []constant.EventSig) bool {
 	}
 	return false
 }
+
+/*
+{
+      "type": "mysql",
+      "url": "event_filter:FLRk1!2o9df9mpK2FLKF+#F@tcp(10.0.3.12:3306)/event_filter?charset=utf8&parseTime=true"
+    },
+*/

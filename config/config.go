@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mapprotocol/filter/internal/constant"
 	"os"
 	"path/filepath"
 )
@@ -10,48 +11,57 @@ import (
 const DefaultConfigPath = "./config.json"
 
 type Config struct {
-	Chains []RawChainConfig `json:"chains"`
-	Other  Construction     `json:"other,omitempty"`
+	Events   string           `json:"events"`
+	Address  string           `json:"address"`
+	Chains   []RawChainConfig `json:"chains"`
+	Other    Construction     `json:"other,omitempty"`
+	Storages []Storage        `json:"storages"`
 }
 
 // RawChainConfig is parsed directly from the config file and should be using to construct the core.ChainConfig
 type RawChainConfig struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	Id           string `json:"id"`       // ChainID
-	Endpoint     string `json:"endpoint"` // url for rpc endpoint
-	KeystorePath string `json:"keystorePath"`
-	Opts         opt    `json:"opts"`
-}
-
-type Construction struct {
-	MonitorUrl string `json:"monitor_url,omitempty"`
-	Etcd       string `json:"etcd,omitempty"`
-	Redis      string `json:"redis,omitempty"`
-	Env        string `json:"env,omitempty"`
-	Db         string `json:"db,omitempty"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Id       string `json:"id"`       // ChainID
+	Endpoint string `json:"endpoint"` // url for rpc endpoint
+	Opts     opt    `json:"opts"`
 }
 
 type opt struct {
 	Mcs                string `json:"mcs,omitempty"`
+	Redis              string `json:"redis,omitempty"`
 	StartBlock         string `json:"startBlock,omitempty"`
 	Event              string `json:"event,omitempty"`
 	BlockConfirmations string `json:"blockConfirmations,omitempty"`
 }
 
+type Construction struct {
+	MonitorUrl string `json:"monitor_url,omitempty"`
+	Env        string `json:"env,omitempty"`
+}
+
+type Storage struct {
+	Type string `json:"type"`
+	Url  string `json:"url"`
+}
+
 func (c *Config) validate() error {
-	for _, chain := range c.Chains {
+	for idx, chain := range c.Chains {
 		if chain.Id == "" {
 			return fmt.Errorf("required field chain.Id empty for chain %s", chain.Id)
 		}
 		if chain.Type == "" {
-			return fmt.Errorf("required field chain.Type empty for chain %s", chain.Id)
+			c.Chains[idx].Type = constant.Ethereum
 		}
 		if chain.Endpoint == "" {
 			return fmt.Errorf("required field chain.Endpoint empty for chain %s", chain.Id)
 		}
 		if chain.Name == "" {
 			return fmt.Errorf("required field chain.Name empty for chain %s", chain.Id)
+		}
+		if c.Chains[idx].Type == constant.Ethereum {
+			c.Chains[idx].Opts.Event = c.Events + "|" + chain.Opts.Event // splicing
+			c.Chains[idx].Opts.Mcs = c.Address + "," + chain.Opts.Mcs    // splicing
 		}
 	}
 	return nil

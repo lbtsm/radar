@@ -8,6 +8,8 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/mapprotocol/near-api-go v0.0.0-20220801061430-b9e1d4580dc5
 	github.com/urfave/cli/v2 v2.25.7
+	gorm.io/driver/mysql v1.5.2
+	gorm.io/gorm v1.25.5
 )
 
 require (
@@ -30,6 +32,8 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/uint256 v1.2.3 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect

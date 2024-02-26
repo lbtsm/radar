@@ -2,12 +2,12 @@ package ethereum
 
 import (
 	"errors"
+	"github.com/mapprotocol/filter/internal/constant"
 	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/mapprotocol/filter/config"
-	"github.com/mapprotocol/filter/constant"
 )
 
 type EthConfig struct {

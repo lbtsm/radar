@@ -5,7 +5,8 @@ import (
 	"github.com/mapprotocol/filter/chain/ethereum"
 	"github.com/mapprotocol/filter/chain/near"
 	"github.com/mapprotocol/filter/config"
-	"github.com/mapprotocol/filter/constant"
+	"github.com/mapprotocol/filter/internal/constant"
+	"github.com/mapprotocol/filter/pkg/storage"
 )
 
 type Chainer interface {
@@ -13,18 +14,19 @@ type Chainer interface {
 	Stop()
 }
 
-func Init(cfgs []config.RawChainConfig) ([]Chainer, error) {
+func Init(cfg *config.Config, storages []storage.Saver) ([]Chainer, error) {
 	ret := make([]Chainer, 0)
-	for _, cfg := range cfgs {
+	for _, ccfg := range cfg.Chains {
 		var (
 			err error
 			c   Chainer
 		)
-		switch cfg.Type {
+
+		switch ccfg.Type {
 		case constant.Ethereum:
-			c, err = ethereum.New(cfg)
+			c, err = ethereum.New(ccfg, storages)
 		case constant.Near:
-			c, err = near.New(cfg)
+			c, err = near.New(ccfg, storages)
 		default:
 			return nil, errors.New("unrecognized Chain Type")
 		}
@@ -32,6 +34,7 @@ func Init(cfgs []config.RawChainConfig) ([]Chainer, error) {
 			return nil, err
 		}
 		ret = append(ret, c)
+		constant.OnlineChaId[ccfg.Id] = struct{}{}
 	}
 	return ret, nil
 }
