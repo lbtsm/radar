@@ -26,6 +26,7 @@ func (c *Chain) sync() error {
 	if local.Cmp(currentBlock) == 1 {
 		currentBlock = local
 	}
+	savedBN := uint64(0)
 	for {
 		select {
 		case <-c.stop:
@@ -38,10 +39,13 @@ func (c *Chain) sync() error {
 				continue
 			}
 
-			for _, s := range c.storages {
-				err = s.LatestBlockNumber(c.cfg.Id, latestBlock)
-				if err != nil {
-					c.log.Error("Save latest block height failed", "storage", s.Type(), "err", err)
+			if latestBlock != savedBN {
+				savedBN = latestBlock
+				for _, s := range c.storages {
+					err = s.LatestBlockNumber(c.cfg.Id, latestBlock)
+					if err != nil {
+						c.log.Error("Save latest block height failed", "storage", s.Type(), "err", err)
+					}
 				}
 			}
 
