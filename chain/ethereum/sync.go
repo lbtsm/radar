@@ -40,12 +40,12 @@ func (c *Chain) sync() error {
 			}
 
 			if latestBlock != savedBN {
+				savedBN = latestBlock
 				for _, s := range c.storages {
 					err = s.LatestBlockNumber(c.cfg.Id, latestBlock)
 					if err != nil {
 						c.log.Error("Save latest block height failed", "storage", s.Type(), "err", err)
 					}
-					savedBN = latestBlock
 				}
 			}
 
