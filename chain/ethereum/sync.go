@@ -164,10 +164,3 @@ func existTopic(target common.Hash, dst []constant.EventSig) bool {
 	}
 	return false
 }
-
-/*
-{
-      "type": "mysql",
-      "url": "event_filter:FLRk1!2o9df9mpK2FLKF+#F@tcp(10.0.3.12:3306)/event_filter?charset=utf8&parseTime=true"
-    },
-*/
