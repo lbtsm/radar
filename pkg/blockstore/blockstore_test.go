@@ -31,7 +31,7 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Expected: %d got: %d", 0, block.Uint64())
 	}
 
-	// Save block number
+	// Mos block number
 	block = big.NewInt(999)
 	err = bs.StoreBlock(block)
 	if err != nil {
@@ -48,7 +48,7 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatalf("Expected: %d got: %d", block.Uint64(), latest.Uint64())
 	}
 
-	// Save block number again
+	// Mos block number again
 	block = big.NewInt(1234)
 	err = bs.StoreBlock(block)
 	if err != nil {
