@@ -12,7 +12,8 @@ import (
 )
 
 var Command = &cli.Command{
-	Name: "cli",
+	Name:  "cli",
+	Flags: []cli.Flag{constant.ConfigFileFlag},
 	Action: func(cli *cli.Context) error {
 		log.Root().SetHandler(log.StdoutHandler)
 		cfg, err := config.Local(cli.String(constant.ConfigFileFlag.Name))

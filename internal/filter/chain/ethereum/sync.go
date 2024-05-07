@@ -49,6 +49,12 @@ func (c *Chain) sync() error {
 				}
 			}
 
+			if currentBlock.Uint64() == 0 {
+				currentBlock = big.NewInt(0).SetUint64(latestBlock)
+				time.Sleep(constant.RetryInterval)
+				continue
+			}
+
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
 				c.log.Debug("Block not ready, will retry", "currentBlock", currentBlock, "latest", latestBlock)
 				time.Sleep(constant.RetryInterval)
@@ -81,6 +87,7 @@ func (c *Chain) renewEvent() error {
 		case <-c.stop:
 			return errors.New("renewEvent polling terminated")
 		default:
+			time.Sleep(time.Second * 30)
 			for _, s := range c.storages {
 				if s.Type() != constant.Mysql {
 					continue

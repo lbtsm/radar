@@ -14,7 +14,7 @@ type Mos struct {
 	LogIndex        uint      `gorm:"column:log_index;default:NULL" gorm:"log_index" json:"log_index"`
 	LogData         string    `gorm:"column:log_data" gorm:"log_data" json:"log_data"`
 	TxTimestamp     uint64    `gorm:"column:tx_timestamp;default:NULL" gorm:"tx_timestamp" json:"tx_timestamp"`
-	CreateAt        time.Time `gorm:"column:create_at;default:CURRENT_TIMESTAMP;NOT NULL" gorm:"create_at" json:"create_at"`
+	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP;NOT NULL" gorm:"created_at" json:"created_at"`
 }
 
 func (m *Mos) TableName() string {

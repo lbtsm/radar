@@ -57,6 +57,9 @@ func (c *Chain) Start() error {
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("%s get events failed", s.Type()))
 		}
+		if len(events) == 0 {
+			continue
+		}
 		c.events = append(c.events, events...)
 		c.eventId = events[len(events)-1].Id
 	}

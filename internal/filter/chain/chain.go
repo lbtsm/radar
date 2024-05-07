@@ -1,7 +1,6 @@
 package chain
 
 import (
-	"errors"
 	"github.com/mapprotocol/filter/internal/filter/chain/ethereum"
 	"github.com/mapprotocol/filter/internal/filter/chain/near"
 	"github.com/mapprotocol/filter/internal/filter/config"
@@ -23,12 +22,10 @@ func Init(cfg *config.Config, storages []storage.Saver) ([]Chainer, error) {
 		)
 
 		switch ccfg.Type {
-		case constant.Ethereum:
-			c, err = ethereum.New(ccfg, storages)
 		case constant.Near:
 			c, err = near.New(ccfg, storages)
 		default:
-			return nil, errors.New("unrecognized Chain Type")
+			c, err = ethereum.New(ccfg, storages)
 		}
 		if err != nil {
 			return nil, err

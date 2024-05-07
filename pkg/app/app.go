@@ -2,13 +2,12 @@ package app
 
 import (
 	"fmt"
-	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
 type App struct {
-	app cli.App
+	app *cli.App
 }
 
 func New(cmds ...*cli.Command) *App {
@@ -20,8 +19,8 @@ func New(cmds ...*cli.Command) *App {
 	app.Authors = []*cli.Author{{Name: "MAP Protocol 2023"}}
 	app.Version = "1.0.0"
 	app.EnableBashCompletion = true
-	app.Flags = append(app.Flags, constant.ConfigFileFlag)
 	app.Commands = append(app.Commands, cmds...)
+	ret.app = app
 
 	return &ret
 }
