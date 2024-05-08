@@ -30,7 +30,7 @@ func (p *Event) Add(ctx context.Context, req *stream.AddEventReq) error {
 	es := constant.EventSig(req.Format)
 	bn := req.BlockNumber
 	if bn == "" {
-		bn = "latest"
+		bn = constant.LatestBlock
 	}
 	err := p.store.Create(ctx, &dao.Event{
 		ProjectId:   req.ProjectId,

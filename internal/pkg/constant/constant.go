@@ -15,6 +15,10 @@ const (
 	Mysql = "mysql"
 )
 
+const (
+	LatestBlock = "latest"
+)
+
 var (
 	RetryInterval = time.Second * 5
 )

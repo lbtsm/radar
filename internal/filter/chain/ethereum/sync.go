@@ -73,6 +73,7 @@ func (c *Chain) sync() error {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
 
+			c.currentProgress = currentBlock.Int64()
 			currentBlock.Add(currentBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
 				time.Sleep(constant.RetryInterval)
@@ -101,15 +102,51 @@ func (c *Chain) renewEvent() error {
 					c.events = append(c.events, tmp)
 					c.eventId = tmp.Id
 					c.log.Info("Add new event", "event", e.Format, "topic", e.Topic, "project", e.ProjectId)
-					// todo old block
+					if tmp.BlockNumber != constant.LatestBlock {
+						c.rangeScan(tmp, c.currentProgress)
+					}
 				}
 			}
 		}
 	}
 }
 
+func (c *Chain) rangeScan(event *dao.Event, end int64) {
+	start, ok := big.NewInt(0).SetString(event.BlockNumber, 10)
+	if !ok {
+		return
+	}
+	topics := make([]common.Hash, 0, 1)
+	topics = append(topics, common.HexToHash(event.Topic))
+	for i := start.Int64(); i < end; i += 10 {
+		// querying for logs
+		logs, err := c.conn.Client().FilterLogs(context.Background(), ethereum.FilterQuery{
+			FromBlock: big.NewInt(i),
+			ToBlock:   big.NewInt(i + 10),
+			Topics:    [][]common.Hash{topics},
+		})
+		if err != nil {
+			continue
+		}
+		if len(logs) == 0 {
+			continue
+		}
+		for _, l := range logs {
+			if !exist(l.Address, c.cfg.Mcs) {
+				c.log.Debug("ignore log, because address not match", "blockNumber", l.BlockNumber, "logAddress", l.Address)
+				continue
+			}
+			ele := l
+			err = c.insert(&ele, event)
+			if err != nil {
+				c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+				continue
+			}
+		}
+	}
+}
+
 func (c *Chain) mosHandler(latestBlock *big.Int) error {
-	cid, _ := strconv.ParseInt(c.cfg.Id, 10, 64)
 	query := c.BuildQuery(latestBlock, latestBlock)
 	// querying for logs
 	logs, err := c.conn.Client().FilterLogs(context.Background(), query)
@@ -119,10 +156,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 	if len(logs) == 0 {
 		return nil
 	}
-	header, err := c.conn.Client().HeaderByNumber(context.Background(), latestBlock)
-	if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
-		return err
-	}
+
 	for _, l := range logs {
 		if !exist(l.Address, c.cfg.Mcs) {
 			c.log.Debug("ignore log, because address not match", "blockNumber", l.BlockNumber, "logAddress", l.Address)
@@ -133,44 +167,59 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 			c.log.Debug("ignore log, because topic not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics[0])
 			continue
 		}
-
-		var (
-			topic     string
-			toChainId uint64
-		)
-		for idx, t := range l.Topics {
-			topic += t.Hex()
-			if idx != len(l.Topics)-1 {
-				topic += ","
-			}
-			if idx == len(l.Topics)-1 {
-				tmp, ok := big.NewInt(0).SetString(strings.TrimPrefix(t.Hex(), "0x"), 16)
-				if ok {
-					toChainId = tmp.Uint64()
-				}
-			}
-		}
-		for _, s := range c.storages {
-			err = s.Mos(toChainId, &dao.Mos{
-				ChainId:         cid,
-				ProjectId:       c.events[idx].ProjectId,
-				EventId:         c.events[idx].Id,
-				TxHash:          l.TxHash.String(),
-				ContractAddress: l.Address.String(),
-				Topic:           topic,
-				BlockNumber:     l.BlockNumber,
-				LogIndex:        l.Index,
-				LogData:         common.Bytes2Hex(l.Data),
-				TxTimestamp:     header.Time,
-			})
-			if err != nil {
-				c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
-				continue
-			}
-			c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
+		ele := l
+		event := c.events[idx]
+		err = c.insert(&ele, event)
+		if err != nil {
+			c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+			continue
 		}
 	}
 
+	return nil
+}
+
+func (c *Chain) insert(l *types.Log, event *dao.Event) error {
+	var (
+		topic     string
+		toChainId uint64
+		cid, _    = strconv.ParseInt(c.cfg.Id, 10, 64)
+	)
+	header, err := c.conn.Client().HeaderByNumber(context.Background(), big.NewInt(0).SetUint64(l.BlockNumber))
+	if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
+		return err
+	}
+	for idx, t := range l.Topics {
+		topic += t.Hex()
+		if idx != len(l.Topics)-1 {
+			topic += ","
+		}
+		if idx == len(l.Topics)-1 {
+			tmp, ok := big.NewInt(0).SetString(strings.TrimPrefix(t.Hex(), "0x"), 16)
+			if ok {
+				toChainId = tmp.Uint64()
+			}
+		}
+	}
+	for _, s := range c.storages {
+		err = s.Mos(toChainId, &dao.Mos{
+			ChainId:         cid,
+			ProjectId:       event.ProjectId,
+			EventId:         event.Id,
+			TxHash:          l.TxHash.String(),
+			ContractAddress: l.Address.String(),
+			Topic:           topic,
+			BlockNumber:     l.BlockNumber,
+			LogIndex:        l.Index,
+			LogData:         common.Bytes2Hex(l.Data),
+			TxTimestamp:     header.Time,
+		})
+		if err != nil {
+			c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+			continue
+		}
+		c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
+	}
 	return nil
 }
 

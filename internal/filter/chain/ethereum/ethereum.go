@@ -11,14 +11,14 @@ import (
 )
 
 type Chain struct {
-	eventId  int64
-	conn     Conner
-	log      log.Logger
-	cfg      *EthConfig
-	stop     chan struct{}
-	bs       blockstore.BlockStorer
-	storages []storage.Saver
-	events   []*dao.Event
+	conn                     Conner
+	log                      log.Logger
+	cfg                      *EthConfig
+	stop                     chan struct{}
+	bs                       blockstore.BlockStorer
+	storages                 []storage.Saver
+	events                   []*dao.Event
+	eventId, currentProgress int64
 }
 
 func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
