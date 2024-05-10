@@ -81,13 +81,13 @@ func (p *Event) List(c *gin.Context) {
 		return
 	}
 	if req.Id == 0 {
-		WriteResponse(c, errors.New("param event id is zero"), nil)
+		WriteResponse(c, errors.New("Param event id is zero"), nil)
 		return
 	}
 
 	ret, err := p.srv.List(c, &req)
 	if err != nil {
-		WriteResponse(c, errors.Wrap(err, "del Event failed"), nil)
+		WriteResponse(c, errors.Wrap(err, "Get Event listfailed"), nil)
 		return
 	}
 	WriteResponse(c, nil, ret)

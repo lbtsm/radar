@@ -39,5 +39,10 @@ func initController(g *gin.Engine, dsn string) error {
 		group.DELETE("", event.Delete)
 		group.GET("/list", event.List)
 	}
+	{
+		mos := handler.NewMos(db)
+		group := v1.Group("mos")
+		group.GET("/list", mos.List)
+	}
 	return nil
 }
