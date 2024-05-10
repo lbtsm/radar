@@ -35,3 +35,13 @@ type EventListReq struct {
 	Offset    int64  `json:"offset"`
 	Limit     int64  `json:"limit"`
 }
+
+type MosListReq struct {
+	Id          int64  `json:"id"`
+	ProjectId   int64  `json:"project_id"`
+	ChainId     int64  `json:"chain_id"`
+	Topic       string `json:"topic"`
+	TxHash      string `json:"tx_hash"`
+	BlockNumber uint64 `json:"block_number"`
+	Limit       int    `json:"limit"`
+}

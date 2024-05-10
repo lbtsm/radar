@@ -63,7 +63,7 @@ func (c *Chain) sync() error {
 			err = c.mosHandler(currentBlock)
 			if err != nil && !errors.Is(err, types.ErrInvalidSig) {
 				c.log.Error("Failed to get events for block", "block", currentBlock, "err", err)
-				utils.Alarm(context.Background(), fmt.Sprintf("mos failed, chain=%s, err is %s", c.cfg.Name, err.Error()))
+				utils.Alarm(context.Background(), fmt.Sprintf("filter failed, chain=%s, err is %s", c.cfg.Name, err.Error()))
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
@@ -99,8 +99,11 @@ func (c *Chain) renewEvent() error {
 				}
 				for _, e := range events {
 					tmp := e
-					c.events = append(c.events, tmp)
 					c.eventId = tmp.Id
+					if tmp.ChainId != "" && tmp.ChainId != c.cfg.Id {
+						continue
+					}
+					c.events = append(c.events, tmp)
 					c.log.Info("Add new event", "event", e.Format, "topic", e.Topic, "project", e.ProjectId)
 					if tmp.BlockNumber != constant.LatestBlock {
 						c.rangeScan(tmp, c.currentProgress)
@@ -116,13 +119,26 @@ func (c *Chain) rangeScan(event *dao.Event, end int64) {
 	if !ok {
 		return
 	}
+	if start.Int64() >= end {
+		c.log.Info("Find a event of appoint blockNumber, but block gather than current block",
+			"appoint", event.BlockNumber, "current", end)
+		return
+	}
+	c.log.Info("Find a event of appoint blockNumber, begin start scan", "appoint", event.BlockNumber, "current", end)
+	// todo store redis
+	filename := fmt.Sprintf("%s-%s-old.json", event.ChainId, event.Topic)
+	err := c.bs.CustomStore(filename, nil)
+	if err != nil {
+		c.log.Error("Find a event of appoint blockNumber, but store local filed", "format", event.Format, "topic", event.Topic)
+		return
+	}
 	topics := make([]common.Hash, 0, 1)
 	topics = append(topics, common.HexToHash(event.Topic))
-	for i := start.Int64(); i < end; i += 10 {
+	for i := start.Int64(); i < end; i += 20 {
 		// querying for logs
 		logs, err := c.conn.Client().FilterLogs(context.Background(), ethereum.FilterQuery{
 			FromBlock: big.NewInt(i),
-			ToBlock:   big.NewInt(i + 10),
+			ToBlock:   big.NewInt(i + 20),
 			Topics:    [][]common.Hash{topics},
 		})
 		if err != nil {
@@ -133,17 +149,19 @@ func (c *Chain) rangeScan(event *dao.Event, end int64) {
 		}
 		for _, l := range logs {
 			if !exist(l.Address, c.cfg.Mcs) {
-				c.log.Debug("ignore log, because address not match", "blockNumber", l.BlockNumber, "logAddress", l.Address)
+				c.log.Debug("RangeScan ignore log, because address not match", "blockNumber", l.BlockNumber, "logAddress", l.Address)
 				continue
 			}
 			ele := l
 			err = c.insert(&ele, event)
 			if err != nil {
-				c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+				c.log.Error("RangeScan insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
 				continue
 			}
 		}
 	}
+	c.log.Info("Range scan finish", "appoint", event.BlockNumber, "current", end)
+	_ = c.bs.DelFile(filename)
 }
 
 func (c *Chain) mosHandler(latestBlock *big.Int) error {

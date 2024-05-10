@@ -48,7 +48,7 @@ func (m *Mos) Get(ctx context.Context, c *store.MosCond) (*dao.Mos, error) {
 	return &ret, err
 }
 
-func (m *Mos) List(ctx context.Context, c *store.MosCond) ([]*dao.Mos, error) {
+func (m *Mos) List(ctx context.Context, c *store.MosCond) ([]*dao.Mos, int64, error) {
 	db := m.db.WithContext(ctx)
 	if c.Id != 0 {
 		db = db.Where("id > ?", c.Id)
@@ -68,7 +68,12 @@ func (m *Mos) List(ctx context.Context, c *store.MosCond) ([]*dao.Mos, error) {
 	if c.TxHash != "" {
 		db = db.Where("tx_hash = ?", c.TxHash)
 	}
+	total := int64(0)
+	err := db.Model(&dao.Event{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
 	ret := make([]*dao.Mos, 0)
-	err := db.Find(&ret).Limit(c.Limit).Error
-	return ret, err
+	err = db.Find(&ret).Limit(c.Limit).Error
+	return ret, total, err
 }
