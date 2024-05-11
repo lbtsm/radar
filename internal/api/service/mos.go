@@ -14,21 +14,27 @@ type MosSrv interface {
 
 type Mos struct {
 	store store.Moser
+	event store.Evener
 }
 
 func NewMosSrv(db *gorm.DB) MosSrv {
-	return &Mos{store: mysql.NewMos(db)}
+	return &Mos{store: mysql.NewMos(db), event: mysql.NewEvent(db)}
 }
 
 func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosListResp, error) {
 	if req.Limit == 0 || req.Limit > 100 {
 		req.Limit = 10
 	}
+	event, err := m.event.Get(ctx, &store.EventCond{Topic: req.Topic, Format: req.Format})
+	if err != nil {
+		return nil, err
+	}
+
 	list, total, err := m.store.List(ctx, &store.MosCond{
 		Id:          req.Id,
 		ChainId:     req.ChainId,
 		ProjectId:   req.ProjectId,
-		EventId:     0,
+		EventId:     event.Id,
 		BlockNumber: req.BlockNumber,
 		TxHash:      req.TxHash,
 		Limit:       req.Limit,
