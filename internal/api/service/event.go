@@ -8,6 +8,7 @@ import (
 	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -34,11 +35,12 @@ func (p *Event) Add(ctx context.Context, req *stream.AddEventReq) error {
 	}
 	err := p.store.Create(ctx, &dao.Event{
 		ProjectId:   req.ProjectId,
+		ChainId:     strconv.FormatInt(req.ChainId, 10),
+		Address:     req.Address,
 		Format:      req.Format,
 		Topic:       es.GetTopic().String(),
 		BlockNumber: bn,
 		CreatedAt:   time.Now(),
-		DeletedAt:   time.Time{},
 	})
 	return err
 }

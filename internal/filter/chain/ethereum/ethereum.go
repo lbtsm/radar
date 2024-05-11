@@ -1,7 +1,6 @@
 package ethereum
 
 import (
-	"fmt"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mapprotocol/filter/internal/filter/config"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
@@ -52,16 +51,9 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 }
 
 func (c *Chain) Start() error {
-	for _, s := range c.storages {
-		events, err := s.GetEvent(0)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("%s get events failed", s.Type()))
-		}
-		if len(events) == 0 {
-			continue
-		}
-		c.events = append(c.events, events...)
-		c.eventId = events[len(events)-1].Id
+	err := c.getMatch(true)
+	if err != nil {
+		return errors.Wrap(err, "init getMatch failed")
 	}
 	go func() {
 		err := c.sync()

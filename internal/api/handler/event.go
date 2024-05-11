@@ -27,8 +27,16 @@ func (p *Event) Add(c *gin.Context) {
 		WriteResponse(c, errors.New("param format is empty"), nil)
 		return
 	}
+	if req.Address == "" {
+		WriteResponse(c, errors.New("param address is empty"), nil)
+		return
+	}
 	if req.ProjectId == 0 {
 		WriteResponse(c, errors.New("param project is zero"), nil)
+		return
+	}
+	if req.BlockNumber != "" && req.ChainId != 0 {
+		WriteResponse(c, errors.New("appoint blockNumber must appoint chain_id"), nil)
 		return
 	}
 

@@ -12,7 +12,9 @@ type GetProjectReq struct {
 
 type AddEventReq struct {
 	ProjectId   int64  `json:"project_id"`
+	ChainId     int64  `json:"chain_id"`
 	Format      string `json:"format" validate:"required"`
+	Address     string `json:"address" validate:"required"`
 	BlockNumber string `json:"block_number"`
 }
 
