@@ -2,11 +2,8 @@ package ethereum
 
 import (
 	"errors"
-	"math/big"
-	"strings"
-
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/mapprotocol/filter/internal/filter/config"
+	"math/big"
 )
 
 type EthConfig struct {
@@ -15,7 +12,6 @@ type EthConfig struct {
 	Endpoint           string // url for rpc endpoint
 	StartBlock         *big.Int
 	BlockConfirmations *big.Int
-	Mcs                []common.Address
 }
 
 func parseConfig(cfg config.RawChainConfig) (*EthConfig, error) {
@@ -40,10 +36,6 @@ func parseConfig(cfg config.RawChainConfig) (*EthConfig, error) {
 			return nil, errors.New("blockConfirmations format failed")
 		}
 		ret.BlockConfirmations = bf
-	}
-
-	for _, addr := range strings.Split(cfg.Opts.Mcs, ",") {
-		ret.Mcs = append(ret.Mcs, common.HexToAddress(addr))
 	}
 
 	return ret, nil

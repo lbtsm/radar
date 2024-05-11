@@ -62,10 +62,6 @@ func (c *Config) validate() error {
 		if chain.Name == "" {
 			return fmt.Errorf("required field chain.Name empty for chain %s", chain.Id)
 		}
-		if c.Chains[idx].Type == constant.Ethereum {
-			c.Chains[idx].Opts.Event = c.Events + "|" + chain.Opts.Event // splicing
-			c.Chains[idx].Opts.Mcs = c.Address + "," + chain.Opts.Mcs    // splicing
-		}
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mapprotocol/filter/internal/api/service"
 	"github.com/mapprotocol/filter/internal/api/stream"
+	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -27,8 +28,16 @@ func (p *Event) Add(c *gin.Context) {
 		WriteResponse(c, errors.New("param format is empty"), nil)
 		return
 	}
+	if req.Address == "" || req.Address == constant.ZeroAddress.String() {
+		WriteResponse(c, errors.New("param address is empty"), nil)
+		return
+	}
 	if req.ProjectId == 0 {
 		WriteResponse(c, errors.New("param project is zero"), nil)
+		return
+	}
+	if req.BlockNumber != "" && req.ChainId != 0 {
+		WriteResponse(c, errors.New("appoint blockNumber must appoint chain_id"), nil)
 		return
 	}
 
@@ -81,13 +90,13 @@ func (p *Event) List(c *gin.Context) {
 		return
 	}
 	if req.Id == 0 {
-		WriteResponse(c, errors.New("param event id is zero"), nil)
+		WriteResponse(c, errors.New("Param event id is zero"), nil)
 		return
 	}
 
 	ret, err := p.srv.List(c, &req)
 	if err != nil {
-		WriteResponse(c, errors.Wrap(err, "del Event failed"), nil)
+		WriteResponse(c, errors.Wrap(err, "Get Event listfailed"), nil)
 		return
 	}
 	WriteResponse(c, nil, ret)

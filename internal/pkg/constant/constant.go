@@ -1,6 +1,7 @@
 package constant
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
 	"time"
 )
@@ -13,6 +14,10 @@ const (
 const (
 	Redis = "redis"
 	Mysql = "mysql"
+)
+
+const (
+	LatestBlock = "latest"
 )
 
 var (
@@ -36,4 +41,8 @@ const (
 
 const (
 	ReqInterval = int64(2)
+)
+
+var (
+	ZeroAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
 )

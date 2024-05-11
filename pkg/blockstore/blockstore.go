@@ -5,7 +5,6 @@ package blockstore
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -16,6 +15,9 @@ const PathPostfix = "./blockStore"
 type BlockStorer interface {
 	StoreBlock(*big.Int) error
 	TryLoadLatestBlock() (*big.Int, error)
+	CustomStore(string, []byte) error
+	DelFile(string) error
+	ReadCustom(string) ([]byte, error)
 }
 
 var _ BlockStorer = &BlockStore{}
@@ -56,11 +58,60 @@ func (b *BlockStore) StoreBlock(block *big.Int) error {
 
 	// Write bytes to file
 	data := []byte(block.String())
-	err := ioutil.WriteFile(b.fullPath, data, 0600)
+	err := os.WriteFile(b.fullPath, data, 0600)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (b *BlockStore) CustomStore(filename string, data []byte) error {
+	// Create dir if it does not exist
+	if _, err := os.Stat(b.path); os.IsNotExist(err) {
+		errr := os.MkdirAll(b.path, os.ModePerm)
+		if errr != nil {
+			return errr
+		}
+	}
+
+	// Write bytes to file
+	err := os.WriteFile(filepath.Join(b.path, filename), data, 0600)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *BlockStore) DelFile(filename string) error {
+	// Create dir if it does not exist
+	if _, err := os.Stat(b.path); os.IsNotExist(err) {
+		errr := os.MkdirAll(b.path, os.ModePerm)
+		if errr != nil {
+			return errr
+		}
+	}
+
+	err := os.Remove(filepath.Join(b.path, filename))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *BlockStore) ReadCustom(filename string) ([]byte, error) {
+	fullPath := filepath.Join(b.path, filename)
+	exists, err := fileExists(fullPath)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, nil
+	}
+	dat, err := os.ReadFile(fullPath)
+	if err != nil {
+		return nil, err
+	}
+	return dat, nil
 }
 
 // TryLoadLatestBlock will attempt to load the latest block for the chain/relayer pair, returning 0 if not found.
@@ -72,7 +123,7 @@ func (b *BlockStore) TryLoadLatestBlock() (*big.Int, error) {
 		return nil, err
 	}
 	if exists {
-		dat, err := ioutil.ReadFile(b.fullPath)
+		dat, err := os.ReadFile(b.fullPath)
 		if err != nil {
 			return nil, err
 		}
