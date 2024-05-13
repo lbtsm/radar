@@ -43,8 +43,10 @@ type GetMosResp struct {
 	ContractAddress string `json:"contract_address"`
 	Topic           string `json:"topic"`
 	BlockNumber     uint64 `json:"block_number"`
+	BlockHash       string `json:"block_hash"`
 	LogIndex        uint   `json:"log_index"`
 	LogData         string `json:"log_data"`
+	TxIndex         uint   `json:"tx_index"`
 	TxTimestamp     uint64 `json:"tx_timestamp"`
 }
 

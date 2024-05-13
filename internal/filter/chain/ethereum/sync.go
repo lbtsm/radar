@@ -202,6 +202,8 @@ func (c *Chain) insert(l *types.Log, event *dao.Event) error {
 			Topic:           topic,
 			BlockNumber:     l.BlockNumber,
 			LogIndex:        l.Index,
+			TxIndex:         l.TxIndex,
+			BlockHash:       l.BlockHash.Hex(),
 			LogData:         common.Bytes2Hex(l.Data),
 			TxTimestamp:     header.Time,
 		})
