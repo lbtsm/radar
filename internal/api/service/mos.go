@@ -30,6 +30,10 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 		req.Limit = 10
 	}
 
+	if req.Id == 0 {
+		req.Id = 1
+	}
+
 	splits := strings.Split(req.Topic, ",")
 	eventIds := make([]int64, 0, len(splits))
 	for _, sp := range splits {
@@ -37,7 +41,7 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 			eventIds = append(eventIds, id)
 			continue
 		}
-		event, err := m.event.Get(ctx, &store.EventCond{Topic: req.Topic, Format: req.Format})
+		event, err := m.event.Get(ctx, &store.EventCond{Topic: sp})
 		if err != nil {
 			return nil, err
 		}

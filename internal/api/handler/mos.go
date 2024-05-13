@@ -22,8 +22,8 @@ func (m *Mos) List(c *gin.Context) {
 		WriteResponse(c, err, nil)
 		return
 	}
-	if req.Id == 0 {
-		WriteResponse(c, errors.New("param event id is zero"), nil)
+	if req.ProjectId == 0 {
+		WriteResponse(c, errors.New("param project id is zero"), nil)
 		return
 	}
 
