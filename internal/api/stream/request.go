@@ -48,3 +48,7 @@ type MosListReq struct {
 	BlockNumber uint64 `json:"block_number" form:"block_number"`
 	Limit       int    `json:"limit" form:"limit"`
 }
+
+type GetBlockReq struct {
+	ChainId int64 `json:"chain_id" form:"chain_id"`
+}

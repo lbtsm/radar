@@ -5,11 +5,13 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
+	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	glog "log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -62,6 +64,21 @@ func (m *Mysql) Mos(toChainId uint64, event *dao.Mos) error {
 }
 
 func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
+	blk := &dao.Block{}
+	err := m.db.Model(&dao.Block{}).Where("chain_id = ?", chainId).First(blk).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = m.db.Create(&dao.Block{
+				ChainId: chainId,
+				Number:  strconv.FormatUint(latest, 10),
+			}).Error
+		}
+		return err
+	}
+	err = m.db.Save(&dao.Block{Id: blk.Id, Number: strconv.FormatUint(latest, 10)}).Error
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
