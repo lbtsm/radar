@@ -18,7 +18,7 @@ func NewMos(db *gorm.DB) *Mos {
 
 func (m *Mos) List(c *gin.Context) {
 	var req stream.MosListReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		WriteResponse(c, err, nil)
 		return
 	}
