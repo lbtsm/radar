@@ -6,6 +6,7 @@ import (
 	"github.com/mapprotocol/filter/internal/api/store/mysql"
 	"github.com/mapprotocol/filter/internal/api/stream"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type MosSrv interface {
@@ -13,28 +14,42 @@ type MosSrv interface {
 }
 
 type Mos struct {
-	store store.Moser
-	event store.Evener
+	store      store.Moser
+	event      store.Evener
+	eventCache map[string]int64
 }
 
 func NewMosSrv(db *gorm.DB) MosSrv {
-	return &Mos{store: mysql.NewMos(db), event: mysql.NewEvent(db)}
+	return &Mos{
+		store: mysql.NewMos(db), event: mysql.NewEvent(db), eventCache: make(map[string]int64),
+	}
 }
 
 func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosListResp, error) {
 	if req.Limit == 0 || req.Limit > 100 {
 		req.Limit = 10
 	}
-	event, err := m.event.Get(ctx, &store.EventCond{Topic: req.Topic, Format: req.Format})
-	if err != nil {
-		return nil, err
+
+	splits := strings.Split(req.Topic, ",")
+	eventIds := make([]int64, 0, len(splits))
+	for _, sp := range splits {
+		if id, ok := m.eventCache[sp]; ok {
+			eventIds = append(eventIds, id)
+			continue
+		}
+		event, err := m.event.Get(ctx, &store.EventCond{Topic: req.Topic, Format: req.Format})
+		if err != nil {
+			return nil, err
+		}
+		m.eventCache[sp] = event.Id
+		eventIds = append(eventIds, event.Id)
 	}
 
 	list, total, err := m.store.List(ctx, &store.MosCond{
 		Id:          req.Id,
 		ChainId:     req.ChainId,
 		ProjectId:   req.ProjectId,
-		EventId:     event.Id,
+		EventIds:    eventIds,
 		BlockNumber: req.BlockNumber,
 		TxHash:      req.TxHash,
 		Limit:       req.Limit,

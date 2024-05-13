@@ -45,7 +45,7 @@ func (c *Chain) sync() error {
 				for _, s := range c.storages {
 					err = s.LatestBlockNumber(c.cfg.Id, latestBlock)
 					if err != nil {
-						c.log.Error("Mos latest block height failed", "storage", s.Type(), "err", err)
+						c.log.Error("Save latest height failed", "storage", s.Type(), "err", err)
 					}
 				}
 			}
@@ -156,7 +156,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 		ele := l
 		idx := c.match(&ele)
 		if idx == -1 {
-			c.log.Debug("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics[0], "address", "logTopic", l.Address)
+			c.log.Info("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
 			continue
 		}
 		event := c.events[idx]

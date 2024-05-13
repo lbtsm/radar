@@ -58,7 +58,7 @@ func (p *Event) Get(c *gin.Context) {
 
 	ret, err := p.srv.Get(c, &req)
 	if err != nil {
-		WriteResponse(c, errors.Wrap(err, "add Event failed"), nil)
+		WriteResponse(c, errors.Wrap(err, "get Event failed"), nil)
 		return
 	}
 	WriteResponse(c, nil, ret)
@@ -96,7 +96,7 @@ func (p *Event) List(c *gin.Context) {
 
 	ret, err := p.srv.List(c, &req)
 	if err != nil {
-		WriteResponse(c, errors.Wrap(err, "Get Event listfailed"), nil)
+		WriteResponse(c, errors.Wrap(err, "Get Event list failed"), nil)
 		return
 	}
 	WriteResponse(c, nil, ret)

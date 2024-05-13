@@ -22,7 +22,7 @@ func initMiddleware(g *gin.Engine) {
 func initController(g *gin.Engine, dsn string) error {
 	db, err := mysql.Init(dsn)
 	if err != nil {
-		return errors.Wrap(err, "init db")
+		return errors.Wrap(err, "init db failed")
 	}
 	v1 := g.Group("/v1")
 	{
@@ -43,6 +43,11 @@ func initController(g *gin.Engine, dsn string) error {
 		mos := handler.NewMos(db)
 		group := v1.Group("mos")
 		group.GET("/list", mos.List)
+	}
+	{
+		b := handler.NewBlock(db)
+		group := v1.Group("block")
+		group.GET("", b.Get)
 	}
 	return nil
 }

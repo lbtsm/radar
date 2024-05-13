@@ -42,4 +42,13 @@ type MosCond struct {
 	BlockNumber                     uint64
 	TxHash                          string
 	Limit                           int
+	EventIds                        []int64
+}
+
+type Blocker interface {
+	Get(ctx context.Context, c *BlockCond) (*dao.Block, error)
+}
+
+type BlockCond struct {
+	ChainId int64
 }
