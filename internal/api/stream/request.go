@@ -20,9 +20,9 @@ type AddEventReq struct {
 
 type GetEventReq struct {
 	Id        int64  `json:"id" form:"id"`
-	ProjectId int64  `json:"project_id"`
-	Format    string `json:"format"`
-	Topic     string `json:"topic"`
+	ProjectId int64  `json:"project_id" form:"project_id"`
+	Format    string `json:"format" form:"format"`
+	Topic     string `json:"topic" form:"topic"`
 }
 
 type DelEventReq struct {
@@ -30,12 +30,12 @@ type DelEventReq struct {
 }
 
 type EventListReq struct {
-	Id        int64  `json:"id"`
-	ProjectId int64  `json:"project_id"`
-	Format    string `json:"format"`
-	Topic     string `json:"topic"`
-	Offset    int64  `json:"offset"`
-	Limit     int64  `json:"limit"`
+	Id        int64  `json:"id" form:"id"`
+	ProjectId int64  `json:"project_id" form:"project_id"`
+	Format    string `json:"format" form:"format"`
+	Topic     string `json:"topic" form:"topic"`
+	Offset    int64  `json:"offset" form:"offset"`
+	Limit     int64  `json:"limit" form:"limit"`
 }
 
 type MosListReq struct {
