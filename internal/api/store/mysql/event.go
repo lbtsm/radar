@@ -62,7 +62,7 @@ func (e *Event) List(ctx context.Context, c *store.EventCond) ([]*dao.Event, int
 	if err != nil {
 		return nil, 0, err
 	}
-	err = db.Find(&ret).Error
+	err = db.Limit(int(c.Limit)).Find(&ret).Error
 	if err != nil {
 		return nil, 0, err
 	}

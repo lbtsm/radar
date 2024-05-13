@@ -77,6 +77,6 @@ func (m *Mos) List(ctx context.Context, c *store.MosCond) ([]*dao.Mos, int64, er
 		return nil, 0, err
 	}
 	ret := make([]*dao.Mos, 0)
-	err = db.Find(&ret).Limit(c.Limit).Error
+	err = db.Limit(c.Limit).Find(&ret).Error
 	return ret, total, err
 }

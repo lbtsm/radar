@@ -18,7 +18,7 @@ func NewBlock(db *gorm.DB) *Block {
 
 func (p *Block) Get(c *gin.Context) {
 	var req stream.GetBlockReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		WriteResponse(c, err, nil)
 		return
 	}

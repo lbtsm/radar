@@ -85,7 +85,7 @@ func (p *Event) Delete(c *gin.Context) {
 
 func (p *Event) List(c *gin.Context) {
 	var req stream.EventListReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		WriteResponse(c, err, nil)
 		return
 	}
