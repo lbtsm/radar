@@ -12,8 +12,8 @@ type Mos struct {
 	BlockHash       string    `gorm:"column:block_hash;default:NULL" gorm:"block_hash" json:"block_hash"`
 	Topic           string    `gorm:"column:topic;default:NULL" gorm:"topic" json:"topic"`
 	BlockNumber     uint64    `gorm:"column:block_number;default:NULL" gorm:"block_number" json:"block_number"`
-	LogIndex        uint      `gorm:"column:log_index;default:NULL" gorm:"log_index" json:"log_index"`
-	TxIndex         uint      `gorm:"column:tx_index;default:NULL" gorm:"tx_index" json:"tx_index"`
+	LogIndex        uint      `gorm:"column:log_index;default:0" gorm:"log_index" json:"log_index"`
+	TxIndex         uint      `gorm:"column:tx_index;default:0" gorm:"tx_index" json:"tx_index"`
 	LogData         string    `gorm:"column:log_data" gorm:"log_data" json:"log_data"`
 	TxTimestamp     uint64    `gorm:"column:tx_timestamp;default:NULL" gorm:"tx_timestamp" json:"tx_timestamp"`
 	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP;NOT NULL" gorm:"created_at" json:"created_at"`
