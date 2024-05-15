@@ -12,6 +12,7 @@ require (
 	github.com/mapprotocol/near-api-go v0.0.0-20220801061430-b9e1d4580dc5
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.25.7
+	golang.org/x/term v0.19.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.5
 )
@@ -36,6 +37,7 @@ require (
 	github.com/eteu-technologies/borsh-go v0.3.2 // indirect
 	github.com/eteu-technologies/golang-uint128 v1.1.2-eteu // indirect
 	github.com/ethereum/c-kzg-4844 v0.3.1 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
@@ -44,6 +46,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

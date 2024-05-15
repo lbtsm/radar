@@ -6,6 +6,7 @@ import (
 	"github.com/mapprotocol/filter/internal/pkg/dao"
 	"github.com/mapprotocol/filter/internal/pkg/storage"
 	"github.com/mapprotocol/filter/pkg/blockstore"
+	"github.com/mapprotocol/filter/pkg/keystore"
 	"github.com/pkg/errors"
 )
 
@@ -26,7 +27,12 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 		return nil, err
 	}
 
-	conn := NewConn(eCfg.Endpoint)
+	kpI, err := keystore.KeypairFromEth(cfg.KeystorePath)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := NewConn(eCfg.Endpoint, kpI)
 	err = conn.Connect()
 	if err != nil {
 		return nil, err

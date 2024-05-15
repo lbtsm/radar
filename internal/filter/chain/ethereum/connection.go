@@ -5,9 +5,13 @@ package ethereum
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
+	"math/big"
 	"time"
 )
 
@@ -17,18 +21,19 @@ type Conner interface {
 }
 
 type Connection struct {
-	endpoint  string
-	http      bool
-	conn      *ethclient.Client
-	reqTime   int64
-	cacheBNum uint64
+	endpoint         string
+	conn             *ethclient.Client
+	reqTime          int64
+	cacheBNum, nonce uint64
+	kp               *keystore.Key
+	opts             *bind.TransactOpts
 }
 
 // NewConn returns an uninitialized connection, must call Connection.Connect() before using.
-func NewConn(endpoint string) *Connection {
+func NewConn(endpoint string, kp *keystore.Key) *Connection {
 	return &Connection{
 		endpoint: endpoint,
-		http:     true,
+		kp:       kp,
 	}
 }
 
@@ -44,7 +49,45 @@ func (c *Connection) Connect() error {
 	}
 	c.conn = ethclient.NewClient(rpcClient)
 
+	// Construct tx opts, call opts, and nonce mechanism
+	opts, _, err := c.newTransactOpts(big.NewInt(0), big.NewInt(1000000), big.NewInt(1000000))
+	if err != nil {
+		return err
+	}
+	c.opts = opts
+	c.nonce = 0
 	return nil
+}
+
+func (c *Connection) newTransactOpts(value, gasLimit, gasPrice *big.Int) (*bind.TransactOpts, uint64, error) {
+	if c.kp == nil {
+		return nil, 0, nil
+	}
+	privateKey := c.kp.PrivateKey
+	address := crypto.PubkeyToAddress(privateKey.PublicKey)
+
+	nonce, err := c.conn.PendingNonceAt(context.Background(), address)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	id, err := c.conn.ChainID(context.Background())
+	if err != nil {
+		return nil, 0, err
+	}
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, id)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = value
+	auth.GasLimit = uint64(gasLimit.Int64())
+	auth.GasPrice = gasPrice
+	auth.Context = context.Background()
+
+	return auth, nonce, nil
 }
 
 func (c *Connection) Client() *ethclient.Client {

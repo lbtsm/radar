@@ -21,6 +21,9 @@ func Init(cfg *config.Config, storages []storage.Saver) ([]Chainer, error) {
 			c   Chainer
 		)
 
+		if ccfg.KeystorePath == "" {
+			ccfg.KeystorePath = cfg.KeystorePath
+		}
 		switch ccfg.Type {
 		case constant.Near:
 			c, err = near.New(ccfg, storages)
