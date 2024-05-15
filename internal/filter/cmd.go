@@ -13,12 +13,16 @@ import (
 
 var Command = &cli.Command{
 	Name:  "cli",
-	Flags: []cli.Flag{constant.ConfigFileFlag},
+	Flags: []cli.Flag{constant.ConfigFileFlag, constant.KeyPathFlag},
 	Action: func(cli *cli.Context) error {
 		log.Root().SetHandler(log.StdoutHandler)
 		cfg, err := config.Local(cli.String(constant.ConfigFileFlag.Name))
 		if err != nil {
 			return err
+		}
+
+		if cfg.KeystorePath == "" {
+			cfg.KeystorePath = cli.String(constant.KeyPathFlag.Name)
 		}
 
 		storages := make([]storage.Saver, 0, len(cfg.Storages))

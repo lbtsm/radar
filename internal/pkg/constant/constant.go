@@ -29,6 +29,10 @@ var (
 		Name:  "config",
 		Usage: "JSON configuration file",
 	}
+	KeyPathFlag = &cli.StringFlag{
+		Name:  "keystorePath",
+		Usage: "Path to keystore",
+	}
 )
 
 var (

@@ -14,20 +14,22 @@ const (
 )
 
 type Config struct {
-	Events   string           `json:"events"`
-	Address  string           `json:"address"`
-	Chains   []RawChainConfig `json:"chains"`
-	Other    Construction     `json:"other,omitempty"`
-	Storages []Storage        `json:"storages"`
+	Events       string           `json:"events"`
+	Address      string           `json:"address"`
+	Chains       []RawChainConfig `json:"chains"`
+	Other        Construction     `json:"other,omitempty"`
+	Storages     []Storage        `json:"storages"`
+	KeystorePath string           `json:"keystore_path"`
 }
 
 // RawChainConfig is parsed directly from the config file and should be using to construct the core.ChainConfig
 type RawChainConfig struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Id       string `json:"id"`       // ChainID
-	Endpoint string `json:"endpoint"` // url for rpc endpoint
-	Opts     opt    `json:"opts"`
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	Id           string `json:"id"`       // ChainID
+	Endpoint     string `json:"endpoint"` // url for rpc endpoint
+	KeystorePath string `json:"keystore_path"`
+	Opts         opt    `json:"opts"`
 }
 
 type opt struct {
