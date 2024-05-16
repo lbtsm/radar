@@ -1,6 +1,7 @@
 package ethereum
 
 import (
+	ethkeystore "github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/mapprotocol/filter/internal/filter/config"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
@@ -12,9 +13,10 @@ import (
 
 type Chain struct {
 	conn                     Conner
+	kp                       *ethkeystore.Key
 	log                      log.Logger
 	cfg                      *EthConfig
-	stop                     chan struct{}
+	stop, eventStop          chan struct{}
 	bs                       blockstore.BlockStorer
 	storages                 []storage.Saver
 	events                   []*dao.Event
@@ -43,13 +45,15 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 	}
 
 	ret := &Chain{
-		conn:     conn,
-		log:      log.New("chain", eCfg.Name),
-		cfg:      eCfg,
-		stop:     make(chan struct{}),
-		bs:       bs,
-		storages: storages,
-		events:   make([]*dao.Event, 0),
+		kp:        kpI,
+		conn:      conn,
+		log:       log.New("chain", eCfg.Name),
+		cfg:       eCfg,
+		stop:      make(chan struct{}),
+		eventStop: make(chan struct{}),
+		bs:        bs,
+		storages:  storages,
+		events:    make([]*dao.Event, 0),
 	}
 	ret.log.SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StdoutHandler))
 
@@ -73,10 +77,15 @@ func (c *Chain) Start() error {
 			c.log.Error("Renew event failed", "err", err)
 		}
 	}()
+
+	go func() {
+		c.watchdog()
+	}()
 	c.log.Info("Starting filter ...")
 	return nil
 }
 
 func (c *Chain) Stop() {
 	close(c.stop)
+	close(c.eventStop)
 }
