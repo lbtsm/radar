@@ -18,6 +18,7 @@ import (
 type Conner interface {
 	Client() *ethclient.Client
 	LatestBlock() (uint64, error)
+	Close()
 }
 
 type Connection struct {

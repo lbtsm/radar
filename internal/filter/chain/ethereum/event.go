@@ -10,7 +10,7 @@ import (
 func (c *Chain) renewEvent() error {
 	for {
 		select {
-		case <-c.stop:
+		case <-c.eventStop:
 			return errors.New("renewEvent polling terminated")
 		default:
 			time.Sleep(time.Second * 30)

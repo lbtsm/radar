@@ -75,7 +75,6 @@ func (c *Chain) sync() error {
 			}
 
 			c.currentProgress = currentBlock.Int64()
-			utils.AddProgress(c.cfg.Id)
 			currentBlock.Add(currentBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
 				time.Sleep(constant.RetryInterval)
