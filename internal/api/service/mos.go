@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
+	"strings"
+
 	"github.com/mapprotocol/filter/internal/api/store"
 	"github.com/mapprotocol/filter/internal/api/store/mysql"
 	"github.com/mapprotocol/filter/internal/api/stream"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type MosSrv interface {
@@ -74,6 +75,7 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 			BlockNumber:     ele.BlockNumber,
 			LogIndex:        ele.LogIndex,
 			LogData:         ele.LogData,
+			TxIndex:         ele.TxIndex,
 			TxTimestamp:     ele.TxTimestamp,
 		})
 	}
