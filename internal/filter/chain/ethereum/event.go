@@ -2,9 +2,10 @@ package ethereum
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/pkg/errors"
-	"time"
 )
 
 func (c *Chain) renewEvent() error {

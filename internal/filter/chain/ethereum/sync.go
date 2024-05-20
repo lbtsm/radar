@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
 	"github.com/pkg/errors"
-	"math/big"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/mapprotocol/filter/pkg/utils"
 )
@@ -24,6 +25,7 @@ func (c *Chain) sync() error {
 	if err != nil {
 		return err
 	}
+	c.log.Info("sync start", "config", currentBlock, "local", local)
 	if local.Cmp(currentBlock) == 1 {
 		currentBlock = local
 	}
@@ -210,7 +212,7 @@ func (c *Chain) insert(l *types.Log, event *dao.Event) error {
 			c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
 			continue
 		}
-		c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index)
+		c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index, "txIndex", l.TxIndex)
 	}
 	return nil
 }

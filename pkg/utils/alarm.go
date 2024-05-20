@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -36,16 +37,19 @@ func Alarm(ctx context.Context, msg string) {
 		}
 	}
 	lock.RUnlock()
+	fmt.Println("send alarm ulock")
 	lock.Lock()
 	monitor[msg] = time.Now().Unix()
 	lock.Unlock()
+	fmt.Println("send alarm ulock")
 	body, err := json.Marshal(map[string]interface{}{
 		"text": fmt.Sprintf("%s %s", prefix, msg),
 	})
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequestWithContext(ctx, "POST", hooksUrl, ioutil.NopCloser(bytes.NewReader(body)))
+
+	req, err := http.NewRequestWithContext(ctx, "POST", hooksUrl, io.NopCloser(bytes.NewReader(body)))
 	if err != nil {
 		return
 	}
@@ -61,5 +65,5 @@ func Alarm(ctx context.Context, msg string) {
 		log.Warn("read resp failed", "err", err)
 		return
 	}
-	log.Info("send alarm message", "resp", string(data))
+	fmt.Println("send alarm message", "resp", string(data))
 }

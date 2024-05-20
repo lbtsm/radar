@@ -16,7 +16,7 @@ type Chain struct {
 	kp                       *ethkeystore.Key
 	log                      log.Logger
 	cfg                      *EthConfig
-	stop, eventStop          chan struct{}
+	stop, eventStop, dog     chan struct{}
 	bs                       blockstore.BlockStorer
 	storages                 []storage.Saver
 	events                   []*dao.Event
@@ -51,6 +51,7 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 		cfg:       eCfg,
 		stop:      make(chan struct{}),
 		eventStop: make(chan struct{}),
+		dog:       make(chan struct{}),
 		bs:        bs,
 		storages:  storages,
 		events:    make([]*dao.Event, 0),
@@ -88,4 +89,5 @@ func (c *Chain) Start() error {
 func (c *Chain) Stop() {
 	close(c.stop)
 	close(c.eventStop)
+	close(c.dog)
 }

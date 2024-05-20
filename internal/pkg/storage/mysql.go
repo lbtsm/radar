@@ -1,6 +1,11 @@
 package storage
 
 import (
+	glog "log"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/log"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
@@ -9,10 +14,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	glog "log"
-	"os"
-	"strconv"
-	"strings"
 )
 
 type Mysql struct {
@@ -35,7 +36,7 @@ func (m *Mysql) init() error {
 		Logger: logger.New(
 			glog.New(os.Stdout, "\r\n", glog.LstdFlags),
 			logger.Config{
-				LogLevel: logger.Info,
+				LogLevel: logger.Warn,
 				Colorful: false,
 			},
 		),

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/mapprotocol/filter/internal/api/store"
 	"github.com/mapprotocol/filter/internal/api/store/mysql"
@@ -17,12 +18,13 @@ type MosSrv interface {
 type Mos struct {
 	store      store.Moser
 	event      store.Evener
-	eventCache map[string]int64
+	updateTime int64
+	eventCache map[string][]int64
 }
 
 func NewMosSrv(db *gorm.DB) MosSrv {
 	return &Mos{
-		store: mysql.NewMos(db), event: mysql.NewEvent(db), eventCache: make(map[string]int64),
+		store: mysql.NewMos(db), event: mysql.NewEvent(db), eventCache: make(map[string][]int64),
 	}
 }
 
@@ -38,16 +40,21 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 	splits := strings.Split(req.Topic, ",")
 	eventIds := make([]int64, 0, len(splits))
 	for _, sp := range splits {
-		if id, ok := m.eventCache[sp]; ok {
-			eventIds = append(eventIds, id)
+		if id, ok := m.eventCache[sp]; ok && time.Now().Unix()-m.updateTime < 300 {
+			eventIds = append(eventIds, id...)
 			continue
 		}
-		event, err := m.event.Get(ctx, &store.EventCond{Topic: sp})
+		events, _, err := m.event.List(ctx, &store.EventCond{Topic: sp})
 		if err != nil {
 			return nil, err
 		}
-		m.eventCache[sp] = event.Id
-		eventIds = append(eventIds, event.Id)
+		ids := make([]int64, 0, len(events))
+		for _, ele := range events {
+			ids = append(ids, ele.Id)
+		}
+		m.eventCache[sp] = ids
+		eventIds = append(eventIds, ids...)
+		m.updateTime = time.Now().Unix()
 	}
 
 	list, total, err := m.store.List(ctx, &store.MosCond{
