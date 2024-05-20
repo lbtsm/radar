@@ -5,14 +5,16 @@ package ethereum
 
 import (
 	"context"
+	"math/big"
+	"net/http"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
-	"math/big"
-	"time"
 )
 
 type Conner interface {
@@ -44,7 +46,15 @@ func (c *Connection) Connect() error {
 		err       error
 		rpcClient *rpc.Client
 	)
-	rpcClient, err = rpc.DialHTTP(c.endpoint)
+	// rpcClient, err = rpc.DialHTTP(c.endpoint)
+	// if err != nil {
+	// 	return err
+	// }
+	cli := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	withClient := rpc.WithHTTPClient(cli)
+	rpcClient, err = rpc.DialOptions(context.Background(), c.endpoint, withClient)
 	if err != nil {
 		return err
 	}
