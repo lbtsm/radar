@@ -44,7 +44,7 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 			eventIds = append(eventIds, id...)
 			continue
 		}
-		events, _, err := m.event.List(ctx, &store.EventCond{Topic: sp})
+		events, _, err := m.event.List(ctx, &store.EventCond{Topic: sp, Limit: 100})
 		if err != nil {
 			return nil, err
 		}
