@@ -31,7 +31,7 @@ func (c *Chain) watchdog() {
 			time.Sleep(time.Minute)
 			for {
 				c.log.Info("watchdog will retry conn ", "endpoint", c.cfg.Endpoint)
-				newConn := NewConn(c.cfg.Endpoint)
+				newConn := NewConn(c.cfg.Endpoint, c.kp)
 				err := newConn.Connect()
 				if err != nil {
 					c.log.Error("watchdog retry conn", "err", err, "endpoint", c.cfg.Endpoint)
