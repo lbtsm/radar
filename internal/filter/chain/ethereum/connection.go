@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
@@ -28,15 +26,15 @@ type Connection struct {
 	conn             *ethclient.Client
 	reqTime          int64
 	cacheBNum, nonce uint64
-	kp               *keystore.Key
-	opts             *bind.TransactOpts
+	//kp               *keystore.Key
+	opts *bind.TransactOpts
 }
 
 // NewConn returns an uninitialized connection, must call Connection.Connect() before using.
-func NewConn(endpoint string, kp *keystore.Key) *Connection {
+func NewConn(endpoint string) *Connection {
 	return &Connection{
 		endpoint: endpoint,
-		kp:       kp,
+		//kp:       kp,
 	}
 }
 
@@ -71,34 +69,34 @@ func (c *Connection) Connect() error {
 }
 
 func (c *Connection) newTransactOpts(value, gasLimit, gasPrice *big.Int) (*bind.TransactOpts, uint64, error) {
-	if c.kp == nil {
-		return nil, 0, nil
-	}
-	privateKey := c.kp.PrivateKey
-	address := crypto.PubkeyToAddress(privateKey.PublicKey)
+	//if c.kp == nil {
+	//	return nil, 0, nil
+	//}
+	//privateKey := c.kp.PrivateKey
+	//address := crypto.PubkeyToAddress(privateKey.PublicKey)
+	//
+	//nonce, err := c.conn.PendingNonceAt(context.Background(), address)
+	//if err != nil {
+	//	return nil, 0, err
+	//}
+	//
+	//id, err := c.conn.ChainID(context.Background())
+	//if err != nil {
+	//	return nil, 0, err
+	//}
+	//
+	//auth, err := bind.NewKeyedTransactorWithChainID(privateKey, id)
+	//if err != nil {
+	//	return nil, 0, err
+	//}
+	//
+	//auth.Nonce = big.NewInt(int64(nonce))
+	//auth.Value = value
+	//auth.GasLimit = uint64(gasLimit.Int64())
+	//auth.GasPrice = gasPrice
+	//auth.Context = context.Background()
 
-	nonce, err := c.conn.PendingNonceAt(context.Background(), address)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	id, err := c.conn.ChainID(context.Background())
-	if err != nil {
-		return nil, 0, err
-	}
-
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, id)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	auth.Nonce = big.NewInt(int64(nonce))
-	auth.Value = value
-	auth.GasLimit = uint64(gasLimit.Int64())
-	auth.GasPrice = gasPrice
-	auth.Context = context.Background()
-
-	return auth, nonce, nil
+	return nil, 0, nil
 }
 
 func (c *Connection) Client() *ethclient.Client {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/mapprotocol/filter/pkg/utils"
 )
 
@@ -32,11 +31,11 @@ func (c *Chain) watchdog() {
 			time.Sleep(time.Minute)
 			for {
 				c.log.Info("watchdog will retry conn ", "endpoint", c.cfg.Endpoint)
-				newConn := NewConn(c.cfg.Endpoint, c.kp)
+				newConn := NewConn(c.cfg.Endpoint)
 				err := newConn.Connect()
 				if err != nil {
 					c.log.Error("watchdog retry conn", "err", err, "endpoint", c.cfg.Endpoint)
-					time.Sleep(constant.RetryInterval)
+					time.Sleep(time.Second * 30)
 					continue
 				}
 				c.conn = newConn
