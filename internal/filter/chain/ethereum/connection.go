@@ -51,7 +51,7 @@ func (c *Connection) Connect() error {
 	// 	return err
 	// }
 	cli := &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 30,
 	}
 	withClient := rpc.WithHTTPClient(cli)
 	rpcClient, err = rpc.DialOptions(context.Background(), c.endpoint, withClient)
@@ -60,13 +60,13 @@ func (c *Connection) Connect() error {
 	}
 	c.conn = ethclient.NewClient(rpcClient)
 
-	// Construct tx opts, call opts, and nonce mechanism
-	opts, _, err := c.newTransactOpts(big.NewInt(0), big.NewInt(1000000), big.NewInt(1000000))
-	if err != nil {
-		return err
-	}
-	c.opts = opts
-	c.nonce = 0
+	//// Construct tx opts, call opts, and nonce mechanism
+	//opts, _, err := c.newTransactOpts(big.NewInt(0), big.NewInt(1000000), big.NewInt(1000000))
+	//if err != nil {
+	//	return err
+	//}
+	//c.opts = opts
+	//c.nonce = 0
 	return nil
 }
 
