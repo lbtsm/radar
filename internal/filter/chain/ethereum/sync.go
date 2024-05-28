@@ -52,10 +52,18 @@ func (c *Chain) sync() error {
 				}
 			}
 
-			if currentBlock.Uint64() == 0 || currentBlock.Uint64()-latestBlock > 0 {
+			if currentBlock.Uint64() == 0 {
 				currentBlock = big.NewInt(0).SetUint64(latestBlock)
-				time.Sleep(constant.RetryInterval)
-				continue
+			}
+
+			diff := currentBlock.Int64() - int64(latestBlock)
+			if diff > 1 {
+				c.log.Info("chain online blockNumber less than local latestBlock, waiting...", "chainBlcNum", latestBlock,
+					"localBlock", currentBlock.Uint64(), "diff", currentBlock.Int64()-int64(latestBlock))
+				utils.Alarm(context.Background(), fmt.Sprintf("chain latestBlock less than local, please admin handler, chain=%s, latest=%d, local=%d",
+					c.cfg.Name, latestBlock, currentBlock.Uint64()))
+				time.Sleep(time.Second * time.Duration(diff))
+				currentBlock = big.NewInt(0).SetUint64(latestBlock)
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
