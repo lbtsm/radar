@@ -165,9 +165,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 		ele := l
 		idx := c.match(&ele)
 		if idx == -1 {
-			if l.Index == 262 {
-				c.log.Info("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
-			}
+			c.log.Debug("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
 			continue
 		}
 		event := c.events[idx]
@@ -177,7 +175,6 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 			continue
 		}
 	}
-	time.Sleep(time.Minute)
 
 	return nil
 }
