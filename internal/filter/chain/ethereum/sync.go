@@ -165,7 +165,9 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 		ele := l
 		idx := c.match(&ele)
 		if idx == -1 {
-			c.log.Debug("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
+			if l.Index == 262 {
+				c.log.Info("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
+			}
 			continue
 		}
 		event := c.events[idx]
@@ -175,6 +177,7 @@ func (c *Chain) mosHandler(latestBlock *big.Int) error {
 			continue
 		}
 	}
+	time.Sleep(time.Minute)
 
 	return nil
 }
@@ -235,7 +238,7 @@ func (c *Chain) BuildQuery(startBlock *big.Int, endBlock *big.Int) ethereum.Filt
 
 func (c *Chain) match(l *types.Log) int {
 	for idx, d := range c.events {
-		if l.Address.String() != d.Address {
+		if !strings.EqualFold(l.Address.String(), d.Address) {
 			continue
 		}
 		if l.Topics[0].Hex() != d.Topic {
