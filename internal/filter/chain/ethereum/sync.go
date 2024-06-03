@@ -235,7 +235,7 @@ func (c *Chain) BuildQuery(startBlock *big.Int, endBlock *big.Int) ethereum.Filt
 
 func (c *Chain) match(l *types.Log) int {
 	for idx, d := range c.events {
-		if l.Address.String() != d.Address {
+		if !strings.EqualFold(l.Address.String(), d.Address) {
 			continue
 		}
 		if l.Topics[0].Hex() != d.Topic {
