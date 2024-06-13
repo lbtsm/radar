@@ -39,7 +39,7 @@ func (c *Chain) getMatch(init bool) error {
 				continue
 			}
 			c.events = append(c.events, tmp)
-			c.log.Info("Add new event", "event", e.Format, "topic", e.Topic, "project", e.ProjectId)
+			c.log.Info("Add new event", "event", e.Format, "addr", e.Address, "project", e.ProjectId)
 			if !init && tmp.BlockNumber != constant.LatestBlock {
 				c.rangeScan(tmp, c.currentProgress)
 			}
