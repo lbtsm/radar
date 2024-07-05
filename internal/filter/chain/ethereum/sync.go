@@ -64,6 +64,7 @@ func (c *Chain) sync() error {
 					c.cfg.Name, latestBlock, currentBlock.Uint64()))
 				time.Sleep(time.Second * time.Duration(diff))
 				currentBlock = big.NewInt(0).SetUint64(latestBlock)
+				continue
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
@@ -236,7 +237,7 @@ func (c *Chain) BuildQuery(startBlock *big.Int, endBlock *big.Int) ethereum.Filt
 
 func (c *Chain) match(l *types.Log) int {
 	for idx, d := range c.events {
-		if l.Address.String() != d.Address {
+		if !strings.EqualFold(l.Address.String(), d.Address) {
 			continue
 		}
 		if l.Topics[0].Hex() != d.Topic {

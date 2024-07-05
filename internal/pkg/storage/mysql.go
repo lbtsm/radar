@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/mapprotocol/filter/pkg/utils"
 	glog "log"
 	"os"
 	"strconv"
@@ -19,11 +20,11 @@ import (
 type Mysql struct {
 	dsn          string
 	db           *gorm.DB
-	chainMapping map[string]int64
+	chainMapping *utils.RWMap
 }
 
 func NewMysql(dsn string) (*Mysql, error) {
-	m := &Mysql{dsn: dsn, chainMapping: make(map[string]int64)}
+	m := &Mysql{dsn: dsn, chainMapping: utils.NewRWMap()}
 	err := m.init()
 	if err != nil {
 		return nil, err
@@ -66,7 +67,7 @@ func (m *Mysql) Mos(toChainId uint64, event *dao.Mos) error {
 }
 
 func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
-	id, ok := m.chainMapping[chainId]
+	id, ok := m.chainMapping.Get(chainId)
 	if ok {
 		err := m.db.Model(&dao.Block{}).Where("id = ?", id).Update("number", strconv.FormatUint(latest, 10)).Error
 		if err != nil {
@@ -85,7 +86,7 @@ func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
 		}
 		return err
 	}
-	m.chainMapping[chainId] = blk.Id
+	m.chainMapping.Set(chainId, blk.Id)
 	err = m.db.Model(&dao.Block{}).Where("id = ?", id).Update("number", strconv.FormatUint(latest, 10)).Error
 	if err != nil {
 		return err

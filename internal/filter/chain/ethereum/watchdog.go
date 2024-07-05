@@ -27,7 +27,7 @@ func (c *Chain) watchdog() {
 				continue
 			}
 			c.log.Info("watchdog work progress not change in minute, will retry conn", "record", tmp, "curr", c.currentProgress)
-			utils.Alarm(context.Background(), fmt.Sprintf("cId(%s) work progress (%d) not change in one minute", c.cfg.Id, tmp))
+			utils.Alarm(context.Background(), fmt.Sprintf("chain(%s) work progress (%d) not change in one minute", c.cfg.Name, tmp))
 			c.log.Info("watchdog work progress not change in minute, send alarm ok")
 			c.stop <- struct{}{}
 			time.Sleep(time.Second)
