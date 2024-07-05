@@ -22,6 +22,10 @@ func (c *Chain) watchdog() {
 				tmp = c.currentProgress
 				continue
 			}
+			if tmp == c.latest {
+				c.log.Info("watchdog progress report, curr = latest", "record", tmp)
+				continue
+			}
 			c.log.Info("watchdog work progress not change in minute, will retry conn", "record", tmp, "curr", c.currentProgress)
 			utils.Alarm(context.Background(), fmt.Sprintf("cId(%s) work progress (%d) not change in one minute", c.cfg.Id, tmp))
 			c.log.Info("watchdog work progress not change in minute, send alarm ok")
