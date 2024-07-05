@@ -1,8 +1,9 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"github.com/mapprotocol/filter/internal/api/config"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
@@ -27,7 +28,10 @@ var Command = &cli.Command{
 			return err
 		}
 
-		endless.ListenAndServe(cfg.Listen, g)
+		httpsrv := &http.Server{Addr: cfg.Listen, Handler: g}
+		if err := httpsrv.ListenAndServe(); err != nil {
+			return err
+		}
 		return nil
 	},
 }
