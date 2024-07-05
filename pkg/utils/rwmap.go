@@ -9,7 +9,7 @@ type RWMap struct {
 
 func NewRWMap() *RWMap {
 	return &RWMap{
-		m: make(map[string]int64, 0),
+		m: make(map[string]int64),
 	}
 }
 func (m *RWMap) Get(k string) (int64, bool) {

@@ -57,13 +57,14 @@ func (c *Chain) sync() error {
 			}
 
 			diff := currentBlock.Int64() - int64(latestBlock)
-			if diff > 1 {
+			if diff > 0 {
 				c.log.Info("chain online blockNumber less than local latestBlock, waiting...", "chainBlcNum", latestBlock,
 					"localBlock", currentBlock.Uint64(), "diff", currentBlock.Int64()-int64(latestBlock))
 				utils.Alarm(context.Background(), fmt.Sprintf("chain latestBlock less than local, please admin handler, chain=%s, latest=%d, local=%d",
 					c.cfg.Name, latestBlock, currentBlock.Uint64()))
 				time.Sleep(time.Second * time.Duration(diff))
 				currentBlock = big.NewInt(0).SetUint64(latestBlock)
+				continue
 			}
 
 			if latestBlock-currentBlock.Uint64() < c.cfg.BlockConfirmations.Uint64() {
@@ -85,6 +86,7 @@ func (c *Chain) sync() error {
 			}
 
 			c.currentProgress = currentBlock.Int64()
+			c.latest = int64(latestBlock)
 			currentBlock.Add(currentBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
 				time.Sleep(constant.RetryInterval)
