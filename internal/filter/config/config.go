@@ -3,9 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"os"
 	"path/filepath"
+
+	"github.com/mapprotocol/filter/internal/pkg/constant"
 )
 
 const (
