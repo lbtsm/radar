@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
 	"log"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -35,23 +36,13 @@ func (c *Chain) sync() error {
 	api := ton.NewAPIClient(client, ton.ProofCheckPolicySecure).WithRetry()
 	api.SetTrustedBlockFromConfig(cfg)
 
-	//c.log.Info("Fetching and checking proofs since config init block, it may take near a minute...")
-	//master, err := api.CurrentMasterchainInfo(context.Background()) // we fetch block just to trigger chain proof check
-	//if err != nil {
-	//	log.Fatalln("get masterchain info err: ", err.Error())
-	//	return err
-	//}
-	//c.log.Info("Master proof checks are completed successfully, now communication is 100% safe!", "master", master.Shard)
-
-	//// address on which we are accepting payments
-	//treasuryAddress := address.MustParseAddr("EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N")
-	//
-	//acc, err := api.GetAccount(context.Background(), master, treasuryAddress)
-	//if err != nil {
-	//	log.Fatalln("get masterchain info err: ", err.Error())
-	//	return err
-	//}
-	//c.log.Info("Get account", "acc", acc.LastTxLT)
+	c.log.Info("Fetching and checking proofs since config init block, it may take near a minute...")
+	master, err := api.CurrentMasterchainInfo(context.Background()) // we fetch block just to trigger chain proof check
+	if err != nil {
+		log.Fatalln("get masterchain info err: ", err.Error())
+		return err
+	}
+	c.log.Info("Master proof checks are completed successfully, now communication is 100% safe!", "master", master.Shard)
 
 	sig := make([]chan struct{}, 0)
 	for _, v := range c.cfg.Mcs {
@@ -59,6 +50,14 @@ func (c *Chain) sync() error {
 		tmp := make(chan struct{})
 		sig = append(sig, tmp)
 		go func(addr string) {
+			// address on which we are accepting payments
+			treasuryAddress := address.MustParseAddr(addr)
+			acc, err := api.GetAccount(context.Background(), master, treasuryAddress)
+			if err != nil {
+				c.log.Error("Get master chain info failed ", "err", err.Error())
+				return
+			}
+			c.log.Info("Get account", "accLastLt", acc.LastTxLT)
 			bs, err := blockstore.New(blockstore.PathPostfix, addr+"-"+c.cfg.Id)
 			if err != nil {
 				c.log.Error("New BlockStore failed", "addr", addr, "err", err)
@@ -66,7 +65,6 @@ func (c *Chain) sync() error {
 				return
 			}
 
-			treasuryAddress := address.MustParseAddr(addr)
 			transactions := make(chan *tlb.Transaction)
 			lastProcessedLT, err := bs.TryLoadLatestBlock()
 			if err != nil {
@@ -76,7 +74,10 @@ func (c *Chain) sync() error {
 			}
 
 			c.log.Info("------------- ", "LT", lastProcessedLT)
-			go api.SubscribeOnTransactions(context.Background(), treasuryAddress, 47839075000001, transactions)
+			if lastProcessedLT.Uint64() == 0 {
+				lastProcessedLT.SetUint64(47839075000001)
+			}
+			go api.SubscribeOnTransactions(context.Background(), treasuryAddress, lastProcessedLT.Uint64(), transactions)
 
 			for {
 				select {
@@ -91,6 +92,7 @@ func (c *Chain) sync() error {
 							c.log.Info("In transaction", "txHash", txHash)
 							continue
 						}
+						_ = bs.StoreBlock(big.NewInt(0).SetUint64(t.LT))
 						msgs, err := t.IO.Out.ToSlice()
 						if err != nil {
 							c.log.Error("Tx ToSlice failed", "addr", addr, "txHash", txHash)
@@ -102,9 +104,6 @@ func (c *Chain) sync() error {
 								continue
 							}
 							externalOut := msg.AsExternalOut()
-							log.Println("src: ", externalOut.SrcAddr)
-							log.Println("dst: ", externalOut.DstAddr)
-
 							idx := c.match(externalOut.DstAddr.String())
 							if idx == -1 {
 								c.log.Info("Ignore this tx, because topic not match", "txHash", txHash,
@@ -122,7 +121,7 @@ func (c *Chain) sync() error {
 									ProjectId:       1,
 									TxHash:          txHash,
 									ContractAddress: treasuryAddress.String(),
-									Topic:           externalOut.DstAddr.String(),
+									Topic:           c.cfg.Event[idx],
 									LogData:         common.Bytes2Hex(data),
 								})
 								if err != nil {
