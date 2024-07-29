@@ -52,7 +52,7 @@ func (c *Chain) sync() error {
 				}
 			}
 
-			if currentBlock.Uint64() == 0 {
+			if currentBlock.Uint64() == 0 || currentBlock.Uint64() > latestBlock {
 				currentBlock = big.NewInt(0).SetUint64(latestBlock)
 			}
 

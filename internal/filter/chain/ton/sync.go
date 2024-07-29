@@ -73,10 +73,10 @@ func (c *Chain) sync() error {
 				return
 			}
 
-			c.log.Info("------------- ", "LT", lastProcessedLT)
 			if lastProcessedLT.Uint64() == 0 {
-				lastProcessedLT.SetUint64(47839075000001)
+				lastProcessedLT.SetUint64(acc.LastTxLT - 1)
 			}
+			c.log.Info("------------- ", "LT", lastProcessedLT)
 			go api.SubscribeOnTransactions(context.Background(), treasuryAddress, lastProcessedLT.Uint64(), transactions)
 
 			for {
@@ -123,6 +123,7 @@ func (c *Chain) sync() error {
 									ContractAddress: treasuryAddress.String(),
 									Topic:           c.cfg.Event[idx],
 									LogData:         common.Bytes2Hex(data),
+									BlockNumber:     t.LT,
 								})
 								if err != nil {
 									c.log.Error("Insert failed", "hash", txHash, "err", err)
