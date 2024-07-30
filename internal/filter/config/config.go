@@ -3,9 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"os"
 	"path/filepath"
+
+	"github.com/mapprotocol/filter/internal/pkg/constant"
 )
 
 const (
@@ -57,9 +58,6 @@ func (c *Config) validate() error {
 		}
 		if chain.Type == "" {
 			c.Chains[idx].Type = constant.Ethereum
-		}
-		if chain.Endpoint == "" {
-			return fmt.Errorf("required field chain.Endpoint empty for chain %s", chain.Id)
 		}
 		if chain.Name == "" {
 			return fmt.Errorf("required field chain.Name empty for chain %s", chain.Id)

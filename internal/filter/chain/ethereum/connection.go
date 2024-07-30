@@ -6,11 +6,12 @@ package ethereum
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"net/http"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -48,12 +49,8 @@ func (c *Connection) Connect() error {
 		rpcClient *rpc.Client
 	)
 	fmt.Println("Connecting to ethereum chain...", "url", c.endpoint)
-	// rpcClient, err = rpc.DialHTTP(c.endpoint)
-	// if err != nil {
-	// 	return err
-	// }
 	cli := &http.Client{
-		Timeout: time.Second * 20,
+		Timeout: time.Second * 60,
 	}
 	withClient := rpc.WithHTTPClient(cli)
 	rpcClient, err = rpc.DialOptions(context.Background(), c.endpoint, withClient)
@@ -61,14 +58,6 @@ func (c *Connection) Connect() error {
 		return err
 	}
 	c.conn = ethclient.NewClient(rpcClient)
-
-	////// Construct tx opts, call opts, and nonce mechanism
-	//opts, _, err := c.newTransactOpts(big.NewInt(0), big.NewInt(1000000), big.NewInt(1000000))
-	//if err != nil {
-	//	return err
-	//}
-	//c.opts = opts
-	//c.nonce = 0
 	return nil
 }
 

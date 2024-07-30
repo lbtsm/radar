@@ -18,7 +18,7 @@ func (c *Chain) watchdog() {
 		default:
 			time.Sleep(time.Minute)
 			if tmp != c.currentProgress {
-				c.log.Info("watchdog progress report", "record", tmp, "curr", c.currentProgress)
+				c.log.Info("watchdog progress report", "record", tmp, "curr", c.currentProgress, "latest", c.latest)
 				tmp = c.currentProgress
 				continue
 			}
