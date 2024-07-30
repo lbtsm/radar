@@ -32,8 +32,12 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 }
 
 func (c *Chain) Start() error {
+	err := c.getMatch()
+	if err != nil {
+		return err
+	}
 	go func() {
-		err := c.sync()
+		err = c.sync()
 		if err != nil {
 			c.log.Error("Polling blocks failed", "err", err)
 		}
