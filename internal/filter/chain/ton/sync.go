@@ -159,8 +159,8 @@ func (c *Chain) sync() error {
 }
 
 func (c *Chain) match(target string) int {
-	for idx, v := range c.cfg.Event {
-		if strings.HasSuffix(target, v) {
+	for idx, v := range c.events {
+		if strings.HasSuffix(target, v.Topic) {
 			return idx
 		}
 	}
