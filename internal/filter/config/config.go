@@ -60,9 +60,6 @@ func (c *Config) validate() error {
 		if chain.Type == "" {
 			c.Chains[idx].Type = constant.Ethereum
 		}
-		if chain.Endpoint == "" {
-			return fmt.Errorf("required field chain.Endpoint empty for chain %s", chain.Id)
-		}
 		if chain.Name == "" {
 			return fmt.Errorf("required field chain.Name empty for chain %s", chain.Id)
 		}

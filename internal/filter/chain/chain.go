@@ -3,6 +3,7 @@ package chain
 import (
 	"github.com/mapprotocol/filter/internal/filter/chain/ethereum"
 	"github.com/mapprotocol/filter/internal/filter/chain/near"
+	"github.com/mapprotocol/filter/internal/filter/chain/ton"
 	"github.com/mapprotocol/filter/internal/filter/config"
 	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/mapprotocol/filter/internal/pkg/storage"
@@ -27,6 +28,8 @@ func Init(cfg *config.Config, storages []storage.Saver) ([]Chainer, error) {
 		switch ccfg.Type {
 		case constant.Near:
 			c, err = near.New(ccfg, storages)
+		case constant.Ton:
+			c, err = ton.New(ccfg, storages)
 		default:
 			c, err = ethereum.New(ccfg, storages)
 		}

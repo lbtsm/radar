@@ -27,12 +27,17 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 		eventStop: make(chan struct{}),
 		dog:       make(chan struct{}),
 		cfg:       eCfg,
+		storages:  storages,
 	}, nil
 }
 
 func (c *Chain) Start() error {
+	err := c.getMatch()
+	if err != nil {
+		return err
+	}
 	go func() {
-		err := c.sync()
+		err = c.sync()
 		if err != nil {
 			c.log.Error("Polling blocks failed", "err", err)
 		}
@@ -40,6 +45,9 @@ func (c *Chain) Start() error {
 	return nil
 }
 
-func (c *Chain) Stop() error {
-	return nil
+func (c *Chain) Stop() {
+	close(c.stop)
+	close(c.eventStop)
+	close(c.dog)
+	return
 }
