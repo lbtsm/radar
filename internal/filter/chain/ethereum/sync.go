@@ -154,7 +154,11 @@ func (c *Chain) rangeScan(event *dao.Event, end int64) {
 }
 
 func (c *Chain) mosHandler(latestBlock *big.Int) error {
-	query := c.BuildQuery(latestBlock, latestBlock)
+	endBlock := latestBlock
+	if c.cfg.Range.Int64() != 0 {
+		endBlock = endBlock.Add(endBlock, c.cfg.Range)
+	}
+	query := c.BuildQuery(latestBlock, endBlock)
 	logs, err := c.conn.Client().FilterLogs(context.Background(), query)
 	if err != nil {
 		return fmt.Errorf("unable to Filter Logs: %w", err)

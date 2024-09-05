@@ -39,6 +39,7 @@ type opt struct {
 	StartBlock         string `json:"startBlock,omitempty"`
 	Event              string `json:"event,omitempty"`
 	BlockConfirmations string `json:"blockConfirmations,omitempty"`
+	Range              string `json:"range,omitempty"`
 }
 
 type Construction struct {
