@@ -72,7 +72,11 @@ func (c *Chain) sync() error {
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
-			err = c.mosHandler(currentBlock)
+			endBlock := currentBlock
+			if c.cfg.Range != nil && c.cfg.Range.Int64() != 0 {
+				endBlock = endBlock.Add(endBlock, c.cfg.Range)
+			}
+			err = c.mosHandler(currentBlock, endBlock)
 			if err != nil && !errors.Is(err, types.ErrInvalidSig) {
 				c.log.Error("Failed to get events for block", "block", currentBlock, "err", err)
 				utils.Alarm(context.Background(), fmt.Sprintf("filter failed, chain=%s, err is %s", c.cfg.Name, err.Error()))
@@ -85,9 +89,9 @@ func (c *Chain) sync() error {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
 
-			c.currentProgress = currentBlock.Int64()
+			c.currentProgress = endBlock.Int64()
 			c.latest = int64(latestBlock)
-			currentBlock.Add(currentBlock, big.NewInt(1))
+			currentBlock = big.NewInt(0).Add(endBlock, big.NewInt(1))
 			if latestBlock-currentBlock.Uint64() <= c.cfg.BlockConfirmations.Uint64() {
 				time.Sleep(constant.RetryInterval)
 			}
@@ -153,11 +157,7 @@ func (c *Chain) rangeScan(event *dao.Event, end int64) {
 	_ = c.bs.DelFile(filename)
 }
 
-func (c *Chain) mosHandler(latestBlock *big.Int) error {
-	endBlock := latestBlock
-	if c.cfg.Range.Int64() != 0 {
-		endBlock = endBlock.Add(endBlock, c.cfg.Range)
-	}
+func (c *Chain) mosHandler(latestBlock, endBlock *big.Int) error {
 	query := c.BuildQuery(latestBlock, endBlock)
 	logs, err := c.conn.Client().FilterLogs(context.Background(), query)
 	if err != nil {

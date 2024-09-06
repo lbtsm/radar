@@ -76,7 +76,8 @@ func (c *Chain) sync() error {
 			}
 
 			if lastProcessedLT.Uint64() == 0 {
-				lastProcessedLT.SetUint64(acc.LastTxLT - 1)
+				lastProcessedLT.SetUint64(48658957000001)
+				//lastProcessedLT.SetUint64(acc.LastTxLT - 1)
 			}
 			c.log.Info("------------- ", "LT", lastProcessedLT)
 			go api.SubscribeOnTransactions(context.Background(), treasuryAddress, lastProcessedLT.Uint64(), transactions)
