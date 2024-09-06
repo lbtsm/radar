@@ -20,6 +20,7 @@ func parseConfig(cfg config.RawChainConfig) (*EthConfig, error) {
 		Name:               cfg.Name,
 		Id:                 cfg.Id,
 		Endpoint:           cfg.Endpoint,
+		Range:              big.NewInt(0),
 		StartBlock:         new(big.Int).SetUint64(0),
 		BlockConfirmations: new(big.Int).SetUint64(config.DefaultBlockConfirm),
 	}
