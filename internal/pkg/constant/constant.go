@@ -34,6 +34,10 @@ var (
 		Name:  "keystorePath",
 		Usage: "Path to keystore",
 	}
+	LatestFlag = &cli.BoolFlag{
+		Name:  "latest",
+		Usage: "use latest block height",
+	}
 )
 
 var (
