@@ -8,6 +8,7 @@ import (
 	"github.com/mapprotocol/filter/internal/pkg/storage"
 	"github.com/mapprotocol/filter/pkg/blockstore"
 	"github.com/pkg/errors"
+	"math/big"
 )
 
 type Chain struct {
@@ -22,16 +23,11 @@ type Chain struct {
 	eventId, currentProgress, latest int64
 }
 
-func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
+func New(cfg config.RawChainConfig, storages []storage.Saver, latest bool) (*Chain, error) {
 	eCfg, err := parseConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-
-	//kpI, err := keystore.KeypairFromEth(cfg.KeystorePath)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	conn := NewConn(eCfg.Endpoint, nil)
 	err = conn.Connect()
@@ -43,8 +39,15 @@ func New(cfg config.RawChainConfig, storages []storage.Saver) (*Chain, error) {
 		return nil, err
 	}
 
+	if latest {
+		latestBlock, err := conn.LatestBlock()
+		if err != nil {
+			return nil, err
+		}
+		eCfg.StartBlock = big.NewInt(int64(latestBlock))
+	}
+
 	ret := &Chain{
-		//kp:        kpI,
 		conn:      conn,
 		log:       log.New("chain", eCfg.Name),
 		cfg:       eCfg,

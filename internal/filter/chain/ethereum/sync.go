@@ -72,9 +72,9 @@ func (c *Chain) sync() error {
 				time.Sleep(constant.RetryInterval)
 				continue
 			}
-			endBlock := currentBlock
+			endBlock := big.NewInt(currentBlock.Int64())
 			if c.cfg.Range != nil && c.cfg.Range.Int64() != 0 {
-				endBlock = endBlock.Add(endBlock, c.cfg.Range)
+				endBlock = endBlock.Add(currentBlock, c.cfg.Range)
 			}
 			err = c.mosHandler(currentBlock, endBlock)
 			if err != nil && !errors.Is(err, types.ErrInvalidSig) {
@@ -84,7 +84,7 @@ func (c *Chain) sync() error {
 				continue
 			}
 
-			err = c.bs.StoreBlock(currentBlock)
+			err = c.bs.StoreBlock(endBlock)
 			if err != nil {
 				c.log.Error("Failed to write latest block to blockStore", "block", currentBlock, "err", err)
 			}
