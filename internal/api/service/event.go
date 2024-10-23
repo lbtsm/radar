@@ -33,9 +33,13 @@ func (p *Event) Add(ctx context.Context, req *stream.AddEventReq) error {
 	if bn == "" {
 		bn = constant.LatestBlock
 	}
+	cId := ""
+	if req.ChainId != 0 {
+		cId = strconv.FormatInt(req.ChainId, 10)
+	}
 	err := p.store.Create(ctx, &dao.Event{
 		ProjectId:   req.ProjectId,
-		ChainId:     strconv.FormatInt(req.ChainId, 10),
+		ChainId:     cId,
 		Address:     req.Address,
 		Format:      req.Format,
 		Topic:       es.GetTopic().String(),
