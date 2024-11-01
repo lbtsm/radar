@@ -11,7 +11,7 @@ import (
 
 const (
 	DefaultConfigPath   = "./config.json"
-	DefaultBlockConfirm = 10
+	DefaultBlockConfirm = 6
 )
 
 type Config struct {
