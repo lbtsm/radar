@@ -36,7 +36,7 @@ func (p *Event) Add(c *gin.Context) {
 		WriteResponse(c, errors.New("param project is zero"), nil)
 		return
 	}
-	if req.BlockNumber != "" && req.ChainId != 0 {
+	if req.BlockNumber != "" && req.ChainId == 0 {
 		WriteResponse(c, errors.New("appoint blockNumber must appoint chain_id"), nil)
 		return
 	}
