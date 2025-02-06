@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mapprotocol/filter/internal/api/store"
@@ -19,12 +20,16 @@ type Mos struct {
 	store      store.Moser
 	event      store.Evener
 	updateTime int64
+	lock       *sync.RWMutex
 	eventCache map[string][]int64
 }
 
 func NewMosSrv(db *gorm.DB) MosSrv {
 	return &Mos{
-		store: mysql.NewMos(db), event: mysql.NewEvent(db), eventCache: make(map[string][]int64),
+		store:      mysql.NewMos(db),
+		event:      mysql.NewEvent(db),
+		eventCache: make(map[string][]int64),
+		lock:       &sync.RWMutex{},
 	}
 }
 
@@ -52,7 +57,9 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 		for _, ele := range events {
 			ids = append(ids, ele.Id)
 		}
+		m.lock.Lock()
 		m.eventCache[sp] = ids
+		m.lock.Unlock()
 		eventIds = append(eventIds, ids...)
 		m.updateTime = time.Now().Unix()
 	}
