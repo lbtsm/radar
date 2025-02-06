@@ -25,7 +25,7 @@ func (c *Chain) sync() error {
 	if err != nil {
 		return err
 	}
-	c.log.Info("sync start", "config", currentBlock, "local", local)
+	c.log.Info("Sync start", "config", currentBlock, "local", local)
 	if local.Cmp(currentBlock) == 1 {
 		currentBlock = local
 	}
@@ -58,7 +58,7 @@ func (c *Chain) sync() error {
 
 			diff := currentBlock.Int64() - int64(latestBlock)
 			if diff > 0 {
-				c.log.Info("chain online blockNumber less than local latestBlock, waiting...", "chainBlcNum", latestBlock,
+				c.log.Info("Chain online blockNumber less than local latestBlock, waiting...", "chainBlcNum", latestBlock,
 					"localBlock", currentBlock.Uint64(), "diff", currentBlock.Int64()-int64(latestBlock))
 				utils.Alarm(context.Background(), fmt.Sprintf("chain latestBlock less than local, please admin handler, chain=%s, latest=%d, local=%d",
 					c.cfg.Name, latestBlock, currentBlock.Uint64()))
@@ -171,13 +171,13 @@ func (c *Chain) mosHandler(latestBlock, endBlock *big.Int) error {
 		ele := l
 		idx := c.match(&ele)
 		if idx == -1 {
-			c.log.Debug("ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
+			c.log.Debug("Ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
 			continue
 		}
 		event := c.events[idx]
 		err = c.insert(&ele, event)
 		if err != nil {
-			c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+			c.log.Error("Insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
 			continue
 		}
 	}
@@ -192,8 +192,9 @@ func (c *Chain) insert(l *types.Log, event *dao.Event) error {
 		cid, _    = strconv.ParseInt(c.cfg.Id, 10, 64)
 	)
 	header, err := c.conn.Client().HeaderByNumber(context.Background(), big.NewInt(0).SetUint64(l.BlockNumber))
-	if err != nil && strings.Index(err.Error(), "server returned non-empty transaction list but block header indicates no transactions") == -1 {
-		return err
+	if err != nil {
+		c.log.Error("Get header by block number failed", "blockNumber", l.BlockNumber, "err", err)
+		header.Time = uint64(time.Now().Unix() - c.cfg.BlockConfirmations.Int64())
 	}
 	for idx, t := range l.Topics {
 		topic += t.Hex()
@@ -223,10 +224,10 @@ func (c *Chain) insert(l *types.Log, event *dao.Event) error {
 			TxTimestamp:     header.Time,
 		})
 		if err != nil {
-			c.log.Error("insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+			c.log.Error("Insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
 			continue
 		}
-		c.log.Info("insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index, "txIndex", l.TxIndex)
+		c.log.Info("Insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index, "txIndex", l.TxIndex)
 	}
 	return nil
 }
