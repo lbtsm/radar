@@ -194,7 +194,9 @@ func (c *Chain) insert(l *types.Log, event *dao.Event) error {
 	header, err := c.conn.Client().HeaderByNumber(context.Background(), big.NewInt(0).SetUint64(l.BlockNumber))
 	if err != nil {
 		c.log.Error("Get header by block number failed", "blockNumber", l.BlockNumber, "err", err)
-		header.Time = uint64(time.Now().Unix() - c.cfg.BlockConfirmations.Int64())
+		header = &types.Header{
+			Time: uint64(time.Now().Unix() - c.cfg.BlockConfirmations.Int64()),
+		}
 	}
 	for idx, t := range l.Topics {
 		topic += t.Hex()
