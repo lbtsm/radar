@@ -45,7 +45,10 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 	splits := strings.Split(req.Topic, ",")
 	eventIds := make([]int64, 0, len(splits))
 	for _, sp := range splits {
-		if id, ok := m.eventCache[sp]; ok && time.Now().Unix()-m.updateTime < 300 {
+		m.lock.RLock()
+		id, ok := m.eventCache[sp]
+		m.lock.RUnlock()
+		if ok && time.Now().Unix()-m.updateTime < 300 {
 			eventIds = append(eventIds, id...)
 			continue
 		}
