@@ -9,6 +9,7 @@ import (
 const (
 	Near     = "near"
 	Ton      = "ton"
+	Xrp      = "xrp"
 	Ethereum = "ethereum"
 )
 
