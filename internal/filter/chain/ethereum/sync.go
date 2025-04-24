@@ -169,16 +169,18 @@ func (c *Chain) mosHandler(latestBlock, endBlock *big.Int) error {
 
 	for _, l := range logs {
 		ele := l
-		idx := c.match(&ele)
-		if idx == -1 {
+		idxs := c.match(&ele)
+		if len(idxs) == 0 {
 			c.log.Debug("Ignore log, because topic or address not match", "blockNumber", l.BlockNumber, "logTopic", l.Topics, "address", l.Address)
 			continue
 		}
-		event := c.events[idx]
-		err = c.insert(&ele, event)
-		if err != nil {
-			c.log.Error("Insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
-			continue
+		for _, idx := range idxs {
+			event := c.events[idx]
+			err = c.insert(&ele, event)
+			if err != nil {
+				c.log.Error("Insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
+				continue
+			}
 		}
 	}
 
@@ -242,7 +244,8 @@ func (c *Chain) BuildQuery(startBlock *big.Int, endBlock *big.Int) ethereum.Filt
 	return query
 }
 
-func (c *Chain) match(l *types.Log) int {
+func (c *Chain) match(l *types.Log) []int {
+	ret := make([]int, 0)
 	for idx, d := range c.events {
 		if !strings.EqualFold(l.Address.String(), d.Address) {
 			continue
@@ -250,7 +253,7 @@ func (c *Chain) match(l *types.Log) int {
 		if l.Topics[0].Hex() != d.Topic {
 			continue
 		}
-		return idx
+		ret = append(ret, idx)
 	}
-	return -1
+	return ret
 }
