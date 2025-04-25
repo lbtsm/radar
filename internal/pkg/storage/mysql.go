@@ -59,7 +59,7 @@ func (m *Mysql) Mos(toChainId uint64, event *dao.Mos) error {
 	if err != nil {
 		if strings.Index(err.Error(), "Duplicate") != -1 {
 			log.Info("log is inserted", "blockNumber", event.BlockNumber, "hash", event.TxHash,
-				"logIndex", event.LogIndex)
+				"logIndex", event.LogIndex, "eventId", event.EventId)
 			return nil
 		}
 		return err

@@ -231,7 +231,7 @@ func (c *Chain) insert(l *types.Log, event *dao.Event) error {
 			c.log.Error("Insert failed", "hash", l.TxHash, "logIndex", l.Index, "err", err)
 			continue
 		}
-		c.log.Info("Insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index, "txIndex", l.TxIndex)
+		c.log.Info("Insert success", "blockNumber", l.BlockNumber, "hash", l.TxHash, "logIndex", l.Index, "txIndex", l.TxIndex, "eventId", event.Id)
 	}
 	return nil
 }

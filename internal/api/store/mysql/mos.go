@@ -68,9 +68,9 @@ func (m *Mos) List(ctx context.Context, c *store.MosCond) ([]*dao.Mos, int64, er
 	if c.TxHash != "" {
 		db = db.Where("tx_hash = ?", c.TxHash)
 	}
-	if len(c.EventIds) != 0 {
-		db = db.Where("event_id IN ?", c.EventIds)
-	}
+	//if len(c.EventIds) != 0 {
+	db = db.Where("event_id IN ?", c.EventIds)
+	//}
 	total := int64(0)
 	err := db.Model(&dao.Mos{}).Count(&total).Error
 	if err != nil {
