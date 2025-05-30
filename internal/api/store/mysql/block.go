@@ -23,3 +23,12 @@ func (e *Block) Get(ctx context.Context, c *store.BlockCond) (*dao.Block, error)
 	}
 	return &ret, nil
 }
+
+func (e *Block) GetCurrentScan(ctx context.Context, c *store.BlockCond) (*dao.ScanBlock, error) {
+	ret := dao.ScanBlock{}
+	err := e.db.WithContext(ctx).Where("chain_id = ?", c.ChainId).First(&ret).Error
+	if err != nil {
+		return nil, err
+	}
+	return &ret, nil
+}

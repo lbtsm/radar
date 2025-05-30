@@ -80,3 +80,26 @@ func (m *Mos) List(ctx context.Context, c *store.MosCond) ([]*dao.Mos, int64, er
 	err = db.Limit(c.Limit).Find(&ret).Error
 	return ret, total, err
 }
+
+func (m *Mos) BlockList(ctx context.Context, c *store.MosCond) ([]*dao.Mos, int64, error) {
+	db := m.db.WithContext(ctx)
+	db = db.Where("block_number = ?", c.BlockNumber).Where("event_id IN ?", c.EventIds)
+	if c.ChainId != 0 {
+		db = db.Where("chain_id = ?", c.ChainId)
+	}
+	if c.ProjectId != 0 {
+		db = db.Where("project_id = ?", c.ProjectId)
+	}
+	if c.EventId != 0 {
+		db = db.Where("event_id = ?", c.EventId)
+	}
+
+	total := int64(0)
+	err := db.Model(&dao.Mos{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	ret := make([]*dao.Mos, 0)
+	err = db.Limit(c.Limit).Find(&ret).Error
+	return ret, total, err
+}

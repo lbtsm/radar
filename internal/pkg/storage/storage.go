@@ -14,6 +14,7 @@ type Saver interface {
 	Type() string
 	Mos(uint64, *dao.Mos) error
 	LatestBlockNumber(chainId string, latest uint64) error
+	ScanBlockNumber(chainId string, latest uint64) error
 	GetEvent(int64) ([]*dao.Event, error)
 }
 

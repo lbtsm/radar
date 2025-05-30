@@ -43,11 +43,13 @@ func initController(g *gin.Engine, dsn string) error {
 		mos := handler.NewMos(db)
 		group := v1.Group("mos")
 		group.GET("/list", mos.List)
+		group.GET("/block/list", mos.BlockList)
 	}
 	{
 		b := handler.NewBlock(db)
 		group := v1.Group("block")
 		group.GET("", b.Get)
+		group.GET("/scan", b.GetCurrentScan)
 	}
 	return nil
 }

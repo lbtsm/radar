@@ -74,6 +74,14 @@ func (r *Redis) LatestBlockNumber(chainId string, latest uint64) error {
 	return nil
 }
 
+func (r *Redis) ScanBlockNumber(chainId string, latest uint64) error {
+	err := r.redisClient.Set(context.Background(), fmt.Sprintf(constant.KeyOfScanBlock, chainId), latest, 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *Redis) GetEvent(int64) ([]*dao.Event, error) {
 	return nil, nil
 }

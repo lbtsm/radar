@@ -35,6 +35,7 @@ type Moser interface {
 	Delete(ctx context.Context, id int64) error
 	Get(ctx context.Context, c *MosCond) (*dao.Mos, error)
 	List(ctx context.Context, c *MosCond) ([]*dao.Mos, int64, error)
+	BlockList(ctx context.Context, c *MosCond) ([]*dao.Mos, int64, error)
 }
 
 type MosCond struct {
@@ -47,6 +48,7 @@ type MosCond struct {
 
 type Blocker interface {
 	Get(ctx context.Context, c *BlockCond) (*dao.Block, error)
+	GetCurrentScan(ctx context.Context, c *BlockCond) (*dao.ScanBlock, error)
 }
 
 type BlockCond struct {

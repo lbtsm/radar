@@ -47,6 +47,7 @@ var (
 
 const (
 	KeyOfLatestBlock = "chain_%s_latest_block"
+	KeyOfScanBlock   = "chain_%s_scan_block"
 )
 
 const (
