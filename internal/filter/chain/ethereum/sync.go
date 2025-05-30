@@ -185,7 +185,8 @@ func (c *Chain) mosHandler(latestBlock, endBlock *big.Int) error {
 	}
 	// save current progress
 	for _, s := range c.storages {
-		_ = s.ScanBlockNumber(c.cfg.Id, endBlock.Uint64())
+		err = s.ScanBlockNumber(c.cfg.Id, endBlock.Uint64())
+		fmt.Println("err ----------- ", err)
 	}
 
 	return nil

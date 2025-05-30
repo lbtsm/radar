@@ -68,7 +68,8 @@ func (m *Mysql) Mos(toChainId uint64, event *dao.Mos) error {
 }
 
 func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
-	id, ok := m.chainMapping.Get(chainId)
+	key := "latest_" + chainId
+	id, ok := m.chainMapping.Get(key)
 	if ok {
 		err := m.db.Model(&dao.Block{}).Where("id = ?", id).Update("number", strconv.FormatUint(latest, 10)).Error
 		if err != nil {
@@ -87,7 +88,7 @@ func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
 		}
 		return err
 	}
-	m.chainMapping.Set(chainId, blk.Id)
+	m.chainMapping.Set(key, blk.Id)
 	err = m.db.Model(&dao.Block{}).Where("id = ?", id).Update("number", strconv.FormatUint(latest, 10)).Error
 	if err != nil {
 		return err
@@ -96,7 +97,8 @@ func (m *Mysql) LatestBlockNumber(chainId string, latest uint64) error {
 }
 
 func (m *Mysql) ScanBlockNumber(chainId string, latest uint64) error {
-	id, ok := m.chainMapping.Get(chainId)
+	key := "scan_" + chainId
+	id, ok := m.chainMapping.Get(key)
 	if ok {
 		err := m.db.Model(&dao.ScanBlock{}).Where("id = ?", id).Update("number", strconv.FormatUint(latest, 10)).Error
 		if err != nil {
@@ -115,7 +117,7 @@ func (m *Mysql) ScanBlockNumber(chainId string, latest uint64) error {
 		}
 		return err
 	}
-	m.chainMapping.Set(chainId, blk.Id)
+	m.chainMapping.Set(key, blk.Id)
 	err = m.db.Model(&dao.ScanBlock{}).Where("id = ?", id).Update("number", strconv.FormatUint(latest, 10)).Error
 	if err != nil {
 		return err
