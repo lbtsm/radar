@@ -21,9 +21,10 @@ type Chain struct {
 	storages                         []storage.Saver
 	events                           []*dao.Event
 	eventId, currentProgress, latest int64
+	isBackUp                         bool
 }
 
-func New(cfg config.RawChainConfig, storages []storage.Saver, latest bool) (*Chain, error) {
+func New(cfg config.RawChainConfig, storages []storage.Saver, latest, isBackUp bool) (*Chain, error) {
 	eCfg, err := parseConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -57,6 +58,7 @@ func New(cfg config.RawChainConfig, storages []storage.Saver, latest bool) (*Cha
 		bs:        bs,
 		storages:  storages,
 		events:    make([]*dao.Event, 0),
+		isBackUp:  isBackUp,
 	}
 	ret.log.SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StdoutHandler))
 

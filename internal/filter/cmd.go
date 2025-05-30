@@ -13,7 +13,7 @@ import (
 
 var Command = &cli.Command{
 	Name:  "cli",
-	Flags: []cli.Flag{constant.ConfigFileFlag, constant.KeyPathFlag, constant.LatestFlag},
+	Flags: []cli.Flag{constant.ConfigFileFlag, constant.KeyPathFlag, constant.LatestFlag, constant.BackUpFlag},
 	Action: func(cli *cli.Context) error {
 		log.Root().SetHandler(log.StdoutHandler)
 		cfg, err := config.Local(cli.String(constant.ConfigFileFlag.Name))
@@ -35,8 +35,9 @@ var Command = &cli.Command{
 		}
 
 		latest := cli.Bool(constant.LatestFlag.Name)
+		isBackUp := cli.Bool(constant.BackUpFlag.Name)
 		utils.Init(cfg.Other.Env, cfg.Other.MonitorUrl)
-		chains, err := chain.Init(cfg, storages, latest)
+		chains, err := chain.Init(cfg, storages, latest, isBackUp)
 		if err != nil {
 			return err
 		}

@@ -15,7 +15,7 @@ type Chainer interface {
 	Stop()
 }
 
-func Init(cfg *config.Config, storages []storage.Saver, latest bool) ([]Chainer, error) {
+func Init(cfg *config.Config, storages []storage.Saver, latest, isBackUp bool) ([]Chainer, error) {
 	ret := make([]Chainer, 0)
 	for _, ccfg := range cfg.Chains {
 		var (
@@ -34,7 +34,7 @@ func Init(cfg *config.Config, storages []storage.Saver, latest bool) ([]Chainer,
 		case constant.Xrp:
 			c, err = xrp.New(ccfg, storages)
 		default:
-			c, err = ethereum.New(ccfg, storages, latest)
+			c, err = ethereum.New(ccfg, storages, latest, isBackUp)
 		}
 		if err != nil {
 			return nil, err

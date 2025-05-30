@@ -39,6 +39,10 @@ var (
 		Name:  "latest",
 		Usage: "use latest block height",
 	}
+	BackUpFlag = &cli.BoolFlag{
+		Name:  "back",
+		Usage: "is back up program",
+	}
 )
 
 var (
