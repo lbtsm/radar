@@ -130,6 +130,7 @@ func (c *Chain) sync() error {
 									Topic:           c.events[idx].Topic,
 									LogData:         common.Bytes2Hex(data),
 									BlockNumber:     t.LT,
+									TxTimestamp:     uint64(time.Now().Unix()),
 								})
 								if err != nil {
 									c.log.Error("Insert failed", "hash", txHash, "err", err)
