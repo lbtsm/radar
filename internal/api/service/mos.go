@@ -91,6 +91,7 @@ func (m *Mos) List(ctx context.Context, req *stream.MosListReq) (*stream.MosList
 			ContractAddress: ele.ContractAddress,
 			Topic:           ele.Topic,
 			BlockNumber:     ele.BlockNumber,
+			BlockHash:       ele.BlockHash,
 			LogIndex:        ele.LogIndex,
 			LogData:         ele.LogData,
 			TxIndex:         ele.TxIndex,
