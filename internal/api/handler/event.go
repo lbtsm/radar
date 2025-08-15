@@ -14,7 +14,7 @@ type Event struct {
 }
 
 func NewEvent(db *gorm.DB) *Event {
-	return &Event{srv: service.NewEventSrv(db)}
+	return &Event{srv: service.NewMysqlEventSrv(db)}
 }
 
 func (p *Event) Add(c *gin.Context) {

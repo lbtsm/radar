@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
 	"github.com/mapprotocol/filter/internal/pkg/stream"
 	"github.com/mapprotocol/filter/pkg/utils"
-	"math/big"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/mapprotocol/filter/internal/pkg/constant"
 	"github.com/pkg/errors"
@@ -176,8 +177,8 @@ func (c *Chain) insert(tx *stream.LedgerTx, event *dao.Event, tIdx int, eventDat
 		topic  string
 		cid, _ = strconv.ParseInt(c.cfg.Id, 10, 64)
 	)
-	topic = strings.Join([]string{event.Topic, eventData.OrderId.String(),
-		"0x" + common.Bytes2Hex(eventData.ChainAndGasLimit.Bytes())}, ",")
+	topic = strings.Join([]string{event.Topic, eventData.OrderID}, ",")
+	eventBytes, _ := json.Marshal(eventData)
 
 	for _, s := range c.storages {
 		err := s.Mos(22776, &dao.Mos{
@@ -191,7 +192,7 @@ func (c *Chain) insert(tx *stream.LedgerTx, event *dao.Event, tIdx int, eventDat
 			LogIndex:        uint(tIdx),
 			TxIndex:         1,
 			BlockHash:       "",
-			LogData:         common.Bytes2Hex(eventData.Data),
+			LogData:         string(eventBytes),
 			TxTimestamp:     uint64(time.Now().Unix()),
 		})
 		if err != nil {
@@ -208,16 +209,42 @@ var (
 	messageOutAbi, _  = abi.JSON(strings.NewReader(messageOutAbiJson))
 )
 
+// type MessageOutEvent struct {
+// 	OrderId          common.Hash `json:"orderId"`
+// 	ChainAndGasLimit *big.Int    `json:"chainAndGasLimit"`
+// 	Data             []byte      `json:"data"`
+// }
+
 type MessageOutEvent struct {
-	OrderId          common.Hash `json:"orderId"`
-	ChainAndGasLimit *big.Int    `json:"chainAndGasLimit"`
-	Data             []byte      `json:"data"`
+	Id           int64  `json:"id"`
+	Topic        string `json:"topic"`
+	BlockNumber  int64  `json:"block_number"`
+	TxHash       string `json:"tx_hash"`
+	Addr         string `json:"addr"`
+	OrderID      string `json:"order_id"`  // orderId
+	From         string `json:"from"`      // relay
+	To           string `json:"to"`        //
+	SrcChain     string `json:"src_chain"` // fromChain
+	SrcToken     string `json:"src_token"` // token
+	Sender       string `json:"sender"`    // initiator
+	InAmount     string `json:"in_amount"` // amount
+	InTxHash     string `json:"in_tx_hash"`
+	BridgeFee    string `json:"bridge_fee"`
+	DstChain     string `json:"dst_chain"`      // toChain
+	DstToken     string `json:"dst_token"`      //
+	Receiver     string `json:"receiver"`       //
+	MOS          string `json:"mos"`            // map mos address
+	Relay        bool   `json:"relay"`          //   (from butter)
+	MessageType  uint8  `json:"message_type"`   // default 3
+	GasLimit     string `json:"gas_limit"`      // default 0
+	MinOutAmount string `json:"min_out_amount"` //  minOutAmount
+	SwapData     string `json:"swap_data"`      // (from butter)
 }
 
 func (c *Chain) match(memoData, hash string) (int, *MessageOutEvent, error) {
 	ret := -1
 	for idx, v := range c.events {
-		if strings.HasPrefix(memoData, strings.ToUpper(strings.TrimPrefix(v.Topic, "0x"))) {
+		if strings.HasPrefix(memoData, strings.ToLower(strings.TrimPrefix(v.Topic, "0x"))) {
 			ret = idx
 			break
 		}
@@ -226,25 +253,16 @@ func (c *Chain) match(memoData, hash string) (int, *MessageOutEvent, error) {
 		return -1, nil, nil
 	}
 
-	rmPrefix := strings.TrimPrefix(memoData, strings.ToUpper(strings.TrimPrefix(c.events[ret].Topic, "0x")))
+	rmPrefix := strings.TrimPrefix(memoData, strings.ToLower(strings.TrimPrefix(c.events[ret].Topic, "0x")))
 	fmt.Println(rmPrefix)
 	hexBytes := common.Hex2Bytes(rmPrefix)
-	// abi encode
-	values, err := messageOutAbi.Methods["messageOut"].Inputs.Unpack(hexBytes)
-	if err != nil {
-		return ret, nil, errors.Wrap(err, fmt.Sprintf("failed to unpack ABI, hash:%s", hash))
-	}
-	//fmt.Println("values ---------------- ", values)
 	event := MessageOutEvent{}
-	err = messageOutAbi.Methods["messageOut"].Inputs.Copy(&event, values)
+	// json encode
+	err := json.Unmarshal(hexBytes, &event)
 	if err != nil {
-		return ret, nil, errors.Wrap(err, fmt.Sprintf("unmarshal event code failed, hash:%s", hash))
+		return -1, nil, errors.Wrap(err, "json unmarshal error")
 	}
 
-	//fmt.Println("event topic ---------------- ", event.Topic.String())
-	//fmt.Println("event orderId ---------------- ", event.OrderId.String())
-	//fmt.Println("event chainAndGasLimit ---------------- ", common.LeftPadBytes(event.ChainAndGasLimit.Bytes(), 32))
-	//fmt.Println("event data ---------------- ", common.Bytes2Hex(event.Data))
 	return ret, &event, nil
 }
 

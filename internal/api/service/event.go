@@ -23,7 +23,7 @@ type Event struct {
 	store store.Evener
 }
 
-func NewEventSrv(db *gorm.DB) EventSrv {
+func NewMysqlEventSrv(db *gorm.DB) EventSrv {
 	return &Event{store: mysql.NewEvent(db)}
 }
 
