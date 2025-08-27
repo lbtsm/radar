@@ -12,6 +12,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/mapprotocol/filter/internal/pkg/butter"
 	"github.com/mapprotocol/filter/internal/pkg/dao"
 	"github.com/mapprotocol/filter/internal/pkg/stream"
 	"github.com/mapprotocol/filter/pkg/utils"
@@ -75,7 +76,7 @@ func (c *Chain) sync() error {
 				endBlock = endBlock.Add(currentBlock, c.cfg.Range)
 			}
 
-			// xrp 自己的逻辑
+			// xrp self logic
 			err = c.mosHandler(currentBlock, endBlock)
 			if err != nil {
 				c.log.Error("Failed to get events for block", "block", currentBlock, "err", err)
@@ -127,7 +128,6 @@ func (c *Chain) mosHandler(startBlock, endBlock *big.Int) error {
 			if endBlock.Int64()%100 == 0 {
 				c.log.Info("No transaction found in block", "startBlock", startBlock, "endBlock", endBlock)
 			}
-
 			continue
 		}
 
@@ -141,6 +141,11 @@ func (c *Chain) mosHandler(startBlock, endBlock *big.Int) error {
 				c.log.Info("Ignore log, because memos is zero", "address", ele, "blockNumber", t.Tx.LedgerIndex, "txHash", t.Tx.Hash)
 				continue
 			}
+			// if t.Tx.Destination != ele {
+			// 	c.log.Info("Ignore log, because destination not match", "address", ele,
+			// 		"blockNumber", t.Tx.LedgerIndex, "txHash", t.Tx.Hash, "destination", t.Tx.Destination)
+			// 	continue
+			// }
 			idx := -1
 			eventData := &MessageOutEvent{}
 			for _, m := range t.Tx.Memos {
@@ -166,7 +171,6 @@ func (c *Chain) mosHandler(startBlock, endBlock *big.Int) error {
 				continue
 			}
 		}
-
 	}
 
 	return nil
@@ -216,35 +220,37 @@ var (
 // }
 
 type MessageOutEvent struct {
-	Id           int64  `json:"id"`
-	Topic        string `json:"topic"`
-	BlockNumber  int64  `json:"block_number"`
-	TxHash       string `json:"tx_hash"`
-	Addr         string `json:"addr"`
-	OrderID      string `json:"order_id"`  // orderId
-	From         string `json:"from"`      // relay
-	To           string `json:"to"`        //
-	SrcChain     string `json:"src_chain"` // fromChain
-	SrcToken     string `json:"src_token"` // token
-	Sender       string `json:"sender"`    // initiator
-	InAmount     string `json:"in_amount"` // amount
-	InTxHash     string `json:"in_tx_hash"`
-	BridgeFee    string `json:"bridge_fee"`
-	DstChain     string `json:"dst_chain"`      // toChain
-	DstToken     string `json:"dst_token"`      //
-	Receiver     string `json:"receiver"`       //
-	MOS          string `json:"mos"`            // map mos address
-	Relay        bool   `json:"relay"`          //   (from butter)
-	MessageType  uint8  `json:"message_type"`   // default 3
-	GasLimit     string `json:"gas_limit"`      // default 0
-	MinOutAmount string `json:"min_out_amount"` //  minOutAmount
-	SwapData     string `json:"swap_data"`      // (from butter)
+	Id                int64  `json:"id"`
+	Topic             string `json:"topic"`
+	BlockNumber       int64  `json:"block_number"`
+	TxHash            string `json:"tx_hash"`
+	Addr              string `json:"addr"`
+	OrderID           string `json:"order_id"`  // orderId
+	From              string `json:"from"`      // relay
+	To                string `json:"to"`        //
+	SrcChain          string `json:"src_chain"` // fromChain
+	SrcToken          string `json:"src_token"` // token
+	Sender            string `json:"sender"`    // initiator
+	InAmount          string `json:"in_amount"` // amount
+	InTxHash          string `json:"in_tx_hash"`
+	BridgeFee         string `json:"bridge_fee"`
+	DstChain          string `json:"dst_chain"`      // toChain
+	DstToken          string `json:"dst_token"`      //
+	Receiver          string `json:"receiver"`       //
+	MOS               string `json:"mos"`            // map mos address
+	Relay             bool   `json:"relay"`          //   (from butter)
+	MessageType       uint8  `json:"message_type"`   // default 3
+	GasLimit          string `json:"gas_limit"`      // default 0
+	MinOutAmount      string `json:"min_out_amount"` //  minOutAmount
+	SwapData          string `json:"swap_data"`      // (from butter)
+	Entrance          string `json:"entrance"`
+	InAmountNoDecimal string `json:"in_amount_no_decimal"` // amount
 }
 
 func (c *Chain) match(memoData, hash string) (int, *MessageOutEvent, error) {
 	ret := -1
 	for idx, v := range c.events {
-		if strings.HasPrefix(memoData, strings.ToLower(strings.TrimPrefix(v.Topic, "0x"))) {
+		if strings.HasPrefix(memoData, strings.ToUpper(strings.TrimPrefix(v.Topic, "0x"))) {
 			ret = idx
 			break
 		}
@@ -252,18 +258,51 @@ func (c *Chain) match(memoData, hash string) (int, *MessageOutEvent, error) {
 	if ret == -1 {
 		return -1, nil, nil
 	}
+	var err error
+	var event *MessageOutEvent
+	switch c.events[ret].Topic {
+	case constant.TopicMessageOut:
+		event, err = c.handlerMessageOut(ret, memoData, hash)
+		if err != nil {
+			return -1, nil, err
+		}
+		return ret, event, nil
+	}
+	return -1, nil, nil
+}
 
-	rmPrefix := strings.TrimPrefix(memoData, strings.ToLower(strings.TrimPrefix(c.events[ret].Topic, "0x")))
-	fmt.Println(rmPrefix)
+func (c *Chain) handlerMessageOut(idx int, memoData, hash string) (*MessageOutEvent, error) {
+	rmPrefix := strings.TrimPrefix(memoData,
+		strings.ToUpper(strings.TrimPrefix(c.events[idx].Topic, "0x")))
 	hexBytes := common.Hex2Bytes(rmPrefix)
 	event := MessageOutEvent{}
 	// json encode
 	err := json.Unmarshal(hexBytes, &event)
 	if err != nil {
-		return -1, nil, errors.Wrap(err, "json unmarshal error")
+		return nil, errors.Wrap(err, "json unmarshal error")
 	}
 
-	return ret, &event, nil
+	resp, err := butter.RequestBridgeData(c.cfg.Butter, hash,
+		&stream.BridgeDataRequest{
+			Entrance:        event.Entrance,
+			Affiliate:       nil,
+			FromChainID:     c.cfg.Id,
+			ToChainID:       event.DstChain,
+			Amount:          event.InAmountNoDecimal,
+			TokenInAddress:  event.SrcToken,
+			TokenOutAddress: event.DstToken,
+			MinAmountOut:    event.MinOutAmount,
+			Receiver:        event.Receiver,
+			Caller:          event.From,
+		})
+	if err != nil {
+		return nil, errors.Wrap(err, "butter request error")
+	}
+	event.Relay = resp.Relay
+	event.SwapData = resp.Data
+	event.To = resp.Receiver
+
+	return &event, nil
 }
 
 func (c *Chain) getMatch() error {

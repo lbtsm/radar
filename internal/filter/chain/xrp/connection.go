@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/mapprotocol/filter/internal/filter/chain/ethereum"
-	"github.com/mapprotocol/filter/internal/pkg/stream"
-	"github.com/pkg/errors"
 	"math/big"
 	"net/http"
 	"time"
+
+	"github.com/mapprotocol/filter/internal/filter/chain/ethereum"
+	"github.com/mapprotocol/filter/internal/pkg/stream"
+	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -71,19 +72,31 @@ func (c *Connection) LatestBlock() (uint64, error) {
 		}},
 	}
 	body, _ := json.Marshal(payload)
-	resp, err := c.conn.Post(c.endpoint, "application/json", bytes.NewReader(body))
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
 
-	var result stream.LedgerResp
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return 0, errors.Wrap(err, "error decoding response")
+	for i := 0; i < 3; i++ {
+		resp, err := c.conn.Post(c.endpoint, "application/json", bytes.NewReader(body))
+		if err != nil {
+			return 0, errors.Wrap(err, "http post error")
+		}
+
+		var result stream.LedgerResp
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		if err != nil {
+			return 0, errors.Wrap(err, "error decoding response")
+		}
+
+		if result.Result.Status != "success" {
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+		if result.Result.LedgerIndex == 0 {
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+		c.cacheBNum = uint64(result.Result.LedgerIndex)
+		break
 	}
 
-	c.cacheBNum = uint64(result.Result.LedgerIndex)
 	c.reqTime = time.Now().Unix()
 	return c.cacheBNum, nil
 }

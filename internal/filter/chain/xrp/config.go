@@ -1,9 +1,10 @@
 package xrp
 
 import (
-	"github.com/pkg/errors"
 	"math/big"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/mapprotocol/filter/internal/filter/config"
 )
@@ -17,6 +18,7 @@ type Config struct {
 	StartBlock         *big.Int
 	BlockConfirmations *big.Int
 	Range              *big.Int
+	Butter             string
 }
 
 func parseConfig(cfg config.RawChainConfig) (*Config, error) {
@@ -55,6 +57,9 @@ func parseConfig(cfg config.RawChainConfig) (*Config, error) {
 			return nil, errors.New("blockConfirmations format failed")
 		}
 		ret.Range = bf
+	}
+	if cfg.Opts.Butter != "" {
+		ret.Butter = cfg.Opts.Butter
 	}
 
 	event := strings.Split(cfg.Opts.Event, ",")

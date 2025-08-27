@@ -32,6 +32,7 @@ func Init(cfg *config.Config, storages []storage.Saver, latest, isBackUp bool) (
 		case constant.Ton:
 			c, err = ton.New(ccfg, storages)
 		case constant.Xrp:
+			ccfg.Opts.Butter = cfg.Other.Butter
 			c, err = xrp.New(ccfg, storages)
 		default:
 			c, err = ethereum.New(ccfg, storages, latest, isBackUp)

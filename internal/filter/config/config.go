@@ -40,11 +40,13 @@ type opt struct {
 	Event              string `json:"event,omitempty"`
 	BlockConfirmations string `json:"blockConfirmations,omitempty"`
 	Range              string `json:"range,omitempty"`
+	Butter             string `json:"butter,omitempty"`
 }
 
 type Construction struct {
 	MonitorUrl string `json:"monitor_url,omitempty"`
 	Env        string `json:"env,omitempty"`
+	Butter     string `json:"butter,omitempty"`
 }
 
 type Storage struct {

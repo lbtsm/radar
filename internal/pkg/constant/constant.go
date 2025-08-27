@@ -1,9 +1,10 @@
 package constant
 
 import (
+	"time"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
-	"time"
 )
 
 const (
@@ -60,4 +61,8 @@ const (
 
 var (
 	ZeroAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
+)
+
+const (
+	TopicMessageOut = "0x2aaebc938a5ab70e98644b0c6a8472fe02b7edece7e6e6dc71959dc34e109dfc"
 )
