@@ -267,6 +267,12 @@ func (c *Chain) match(memoData, hash string) (int, *MessageOutEvent, error) {
 			return -1, nil, err
 		}
 		return ret, event, nil
+	case constant.TopicMessageIn:
+		event, err = c.handlerMessageIn(ret, memoData, hash)
+		if err != nil {
+			return -1, nil, err
+		}
+		return ret, event, nil
 	}
 	return -1, nil, nil
 }
@@ -301,6 +307,20 @@ func (c *Chain) handlerMessageOut(idx int, memoData, hash string) (*MessageOutEv
 	event.Relay = resp.Relay
 	event.SwapData = resp.Data
 	event.To = resp.Receiver
+
+	return &event, nil
+}
+
+func (c *Chain) handlerMessageIn(idx int, memoData, hash string) (*MessageOutEvent, error) {
+	rmPrefix := strings.TrimPrefix(memoData,
+		strings.ToUpper(strings.TrimPrefix(c.events[idx].Topic, "0x")))
+	strBytes := common.Hex2Bytes(rmPrefix)
+	c.log.Info("handlerMessageIn", "hash", hash, "strBytes", string(strBytes))
+	parts := strings.Split(string(strBytes), "|")
+	event := MessageOutEvent{}
+	event.Topic = c.events[idx].Topic
+	event.SrcChain = parts[1]
+	event.OrderID = parts[2]
 
 	return &event, nil
 }
