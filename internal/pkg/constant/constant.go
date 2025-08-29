@@ -65,5 +65,5 @@ var (
 
 const (
 	TopicMessageOut = "0x2aaebc938a5ab70e98644b0c6a8472fe02b7edece7e6e6dc71959dc34e109dfc"
-	TopicMessageIn  = "0xf01fbdd2fdbc5c2f201d087d588789d600e38fe56427e813d9dced2cdb25bcac"
+	TopicMessageIn  = "0x549a11bfdfd61bdd00339bd8eb4af92f372360742915f6e72f7fec6c8e702c39"
 )

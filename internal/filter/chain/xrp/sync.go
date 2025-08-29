@@ -262,11 +262,11 @@ func (c *Chain) match(memoData, hash string) (int, *MessageOutEvent, error) {
 	var event *MessageOutEvent
 	switch c.events[ret].Topic {
 	case constant.TopicMessageOut:
-		event, err = c.handlerMessageOut(ret, memoData, hash)
-		if err != nil {
-			return -1, nil, err
-		}
-		return ret, event, nil
+		// event, err = c.handlerMessageOut(ret, memoData, hash)
+		// if err != nil {
+		// 	return -1, nil, err
+		// }
+		// return ret, event, nil
 	case constant.TopicMessageIn:
 		event, err = c.handlerMessageIn(ret, memoData, hash)
 		if err != nil {
